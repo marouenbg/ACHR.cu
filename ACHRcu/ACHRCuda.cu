@@ -19,15 +19,76 @@
 #include <thrust/extrema.h>
 #include <thrust/device_ptr.h>
 #include <math_functions.h>
-
-#include <iostream>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit.h>
+/*#include <iostream>
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
-#include <cmath>
+#include <cmath>*/
 
 #define EPSILON 2.2204e-16 
+
+void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
+	/* The CUDA version uses full SVD decomposition, the GSL version uses
+	QR decomposition and economic SVD for higher precision of QR*/
+	//SVD method with N(A) is columns of U with sv=0 in svd(At)
+	//int istart;// index of the first null sv (supposdly sorted - could be tested)
+	gsl_matrix * A      = gsl_matrix_alloc(nMets,nRxns);
+
+	//copy S in gsl format
+	for(int j=0;j<nRxns;j++){
+		for(int i=0;i<nMets;i++){
+			gsl_matrix_set(A,i,j,S[i+j*nMets]);
+		}
+	}
+	
+	gsl_matrix * AtA  = gsl_matrix_alloc(nRxns,nRxns); 
+	gsl_matrix * V    = gsl_matrix_alloc(nRxns,nRxns);
+	gsl_vector * sv   = gsl_vector_alloc(nRxns);
+	gsl_vector * work = gsl_vector_alloc(nRxns);
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans,1.0, A, A,0.0, AtA);
+
+	//SVD of AtA
+	gsl_linalg_SV_decomp(AtA,V,sv,work);
+	//find null sv wrt a tol (since they are sorted just find the first one)
+	double tol = nRxns *  gsl_vector_max(sv) * EPSILON;
+	for(int i=0;i<nRxns;i++){
+		if(gsl_vector_get(sv,i) < tol){
+			*istart = i;
+			break;
+		}
+	}
+	printf("sv_%d = %g\n",*istart,gsl_vector_get(sv,*istart));
+
+	//QR decomposition to extend At (U of At is the final Vt of A) to a full n*n basis
+	gsl_vector *tau = gsl_vector_alloc(nRxns);
+	gsl_matrix *vv  = gsl_matrix_alloc(nRxns,nRxns); 
+	//At has the elements of U now (need to copy original At if still needed)
+	gsl_linalg_QR_decomp(AtA,tau);
+	gsl_matrix *R = gsl_matrix_alloc(nRxns,nRxns);
+	gsl_linalg_QR_unpack(AtA,tau,vv,R);
+	gsl_matrix_transpose(vv);
+
+	//printf("Kernel dim are %d %d\n",nRxns,nRxns-*istart);
+	h_N = (double*)realloc(h_N,nRxns*(nRxns-(*istart))*sizeof(double));
+	for(int i=0;i<nRxns;i++){//Realloc h_n
+		for(int j=0;j<nRxns-*istart;j++){
+			h_N[i*(nRxns-*istart)+j] = gsl_matrix_get(vv,i,*istart+j);
+		}
+	}
+
+	//free the memory
+	gsl_vector_free(sv);
+	gsl_vector_free(work);
+	gsl_matrix_free(AtA);
+	gsl_matrix_free(V);
+	gsl_vector_free(tau);
+	gsl_matrix_free(vv);
+	gsl_matrix_free(R);
+}
 
 __device__ void correctBounds(double *d_curPoint, double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint){
 
@@ -266,7 +327,7 @@ void createCenterPt(double *h_fluxMat, int nPts, int nRxns, double *h_centerPoin
 	cudaFree(d_fluxMat);
 }
 
-void computeKernel(double *h_Slin,int nRxns,int nMets, int *istart,double *h_N, double *d_Slin, cublasHandle_t handle){
+void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h_N, double *d_Slin, cublasHandle_t handle){
 	//SVD method with N(A) is columns of U with sv=0 in svd(At)
 	// istart is the index of the first null sv (cuda sorts them)
 	int work_size=0;
@@ -446,7 +507,8 @@ int main(int argc, char **argv){
 
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
-	computeKernel(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);
+	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);
+	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
 	double alpha=1.0, beta=0.0;
