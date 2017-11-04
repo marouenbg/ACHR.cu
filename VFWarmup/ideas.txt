@@ -1,0 +1,8 @@
+Consider looping over each reaction min max rather than max first then min
+
+
+resolve npts/2
+
+fix outer loop
+
+normalisation at the end
