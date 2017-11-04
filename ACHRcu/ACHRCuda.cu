@@ -507,8 +507,8 @@ int main(int argc, char **argv){
 
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
-	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);
-	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns
+	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
+	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
 	double alpha=1.0, beta=0.0;

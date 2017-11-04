@@ -27,8 +27,9 @@ end
 if (nargin < 9) || isempty(maxTime)
     maxTime = 10*3600;
 end
-
+tic;
 N = null(full(model.S)'*full(model.S));
+toc;
 
 % Minimum allowed distance to the closest constraint
 maxMinTol = 1e-9;
@@ -165,7 +166,7 @@ for i = 1:nFiles
               fprintf(fidErr,'%10.8f\n',full(max(max(abs(model.S*curPoint)))));
             end
 
-            prevPoint = curPoint
+            prevPoint = curPoint;
             stepCount = stepCount + 1;
 
             % Count the total number of steps
