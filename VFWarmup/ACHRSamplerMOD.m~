@@ -166,7 +166,7 @@ for i = 1:nFiles
               fprintf(fidErr,'%10.8f\n',full(max(max(abs(model.S*curPoint)))));
             end
 
-            prevPoint = curPoint
+            prevPoint = curPoint;
             stepCount = stepCount + 1;
 
             % Count the total number of steps
@@ -192,7 +192,7 @@ for i = 1:nFiles
 
         % Add the current point to points
         points(:,pointCount) = curPoint;
-
+    
         pointCount = pointCount + 1;
 
     end % Points per cycle

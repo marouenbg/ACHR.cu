@@ -32,9 +32,11 @@
 #define EPSILON 2.2204e-16 
 
 void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
-	/* The CUDA version uses full SVD decomposition, the GSL version uses
-	QR decomposition and economic SVD for higher precision of QR*/
-	//SVD method with N(A) is columns of U with sv=0 in svd(At)
+	/* Sequential null space computation through full SVD with GSL, the SVD is done on AtA because
+	GSL requires m>=n. N(AtA)=N(A) is the columns of V corresponding to null singular values
+	Possibly a test can be done on the matrix size and the SVD can be done on At, the null 
+	space would span the columns of U corresponding to null singular values*/
+
 	//int istart;// index of the first null sv (supposdly sorted - could be tested)
 	gsl_matrix * A      = gsl_matrix_alloc(nMets,nRxns);
 
@@ -44,7 +46,7 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 			gsl_matrix_set(A,i,j,S[i+j*nMets]);
 		}
 	}
-	
+	//declare SVD variables
 	gsl_matrix * AtA  = gsl_matrix_alloc(nRxns,nRxns); 
 	gsl_matrix * V    = gsl_matrix_alloc(nRxns,nRxns);
 	gsl_vector * sv   = gsl_vector_alloc(nRxns);
@@ -63,20 +65,13 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	}
 	printf("sv_%d = %g\n",*istart,gsl_vector_get(sv,*istart));
 
-	//QR decomposition to extend At (U of At is the final Vt of A) to a full n*n basis
-	gsl_vector *tau = gsl_vector_alloc(nRxns);
-	gsl_matrix *vv  = gsl_matrix_alloc(nRxns,nRxns); 
-	//At has the elements of U now (need to copy original At if still needed)
-	gsl_linalg_QR_decomp(AtA,tau);
-	gsl_matrix *R = gsl_matrix_alloc(nRxns,nRxns);
-	gsl_linalg_QR_unpack(AtA,tau,vv,R);
-	gsl_matrix_transpose(vv);
-
 	//printf("Kernel dim are %d %d\n",nRxns,nRxns-*istart);
-	h_N = (double*)realloc(h_N,nRxns*(nRxns-(*istart))*sizeof(double));
-	for(int i=0;i<nRxns;i++){//Realloc h_n
-		for(int j=0;j<nRxns-*istart;j++){
-			h_N[i*(nRxns-*istart)+j] = gsl_matrix_get(vv,i,*istart+j);
+	h_N = (double*)realloc(h_N,nRxns*(nRxns-(*istart))*sizeof(double));//Realloc h_N
+	int k=0;
+	for(int j=*istart;j<nRxns;j++){
+		for(int i=0;i<nRxns;i++){
+			h_N[k] = gsl_matrix_get(V,i,j);
+			k++;
 		}
 	}
 
@@ -85,9 +80,6 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	gsl_vector_free(work);
 	gsl_matrix_free(AtA);
 	gsl_matrix_free(V);
-	gsl_vector_free(tau);
-	gsl_matrix_free(vv);
-	gsl_matrix_free(R);
 }
 
 __device__ void correctBounds(double *d_curPoint, double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint){
@@ -150,10 +142,9 @@ __device__ void advNextStep(double *d_prevPoint, double *d_curPoint, double *d_u
 
 __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int nPts, double *d_centerPoint, double *d_u,double *d_distUb, double *d_distLb,double  *d_ub,double *d_lb,double *d_prevPoint, int d_nValid,double d_pos, double dTol, double uTol, double d_pos_max, double d_pos_min, double *d_maxStepVec, double *d_minStepVec, double *d_min_ptr, double *d_max_ptr){
 
-	int d_lenPosDir, d_lenNegDir;
+	int k;
 	double d_norm, d_sum;
-	d_lenPosDir=0;
-	d_lenNegDir=0;
+	k=0;
 	/*square<double>        unary_op;
     	thrust::plus<double> binary_op;
     	double init = 0;*/
@@ -173,26 +164,21 @@ __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int 
 		d_distLb[i]=d_prevPoint[i]-d_lb[i];
 		if(d_distUb[i]>dTol && d_distLb[i]>dTol){
 			if(d_u[i] > uTol){
-				d_minStepVec[d_lenPosDir]=-d_distLb[i]/d_u[i];
-				d_maxStepVec[d_lenPosDir]=d_distUb[i]/d_u[i];
-				d_lenPosDir++;
+				d_minStepVec[k]=-d_distLb[i]/d_u[i];
+				d_maxStepVec[k]=d_distUb[i]/d_u[i];
+				k++;
 			}else if(d_u[i] < -uTol){
-				d_minStepVec[d_lenNegDir+nRxns]=d_distUb[i]/d_u[i];
-				d_maxStepVec[d_lenNegDir+nRxns]=-d_distLb[i]/d_u[i];
-				d_lenNegDir++;
+				d_minStepVec[k]=d_distUb[i]/d_u[i];
+				d_maxStepVec[k]=-d_distLb[i]/d_u[i];
+				k++;
 			}
 			d_nValid++;
 		}
 	}
-	
-	for(int i=d_lenPosDir;i<nRxns;i++){
-		d_minStepVec[i]=d_minStepVec[0];
-		d_maxStepVec[i]=d_maxStepVec[0];
-	}
 
-	double *d_min_ptr_dev = thrust::max_element(thrust::device,d_minStepVec, d_minStepVec + d_lenPosDir + d_lenNegDir);
+	double *d_min_ptr_dev = thrust::max_element(thrust::device,d_minStepVec, d_minStepVec + k);
 	
-	double *d_max_ptr_dev = thrust::min_element(thrust::device,d_maxStepVec, d_maxStepVec + d_lenPosDir + d_lenNegDir);
+	double *d_max_ptr_dev = thrust::min_element(thrust::device,d_maxStepVec, d_maxStepVec + k);
 
 	d_min_ptr[0] = *d_min_ptr_dev;
 	d_max_ptr[0] = *d_max_ptr_dev;
@@ -219,8 +205,8 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, dev_max[1], alpha, beta;
 
+	d_nValid=0;
 	while(stepCount < stepsPerPoint){
-		d_nValid=0;
 		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
 		//printf("randPoint id is %d \n",randPointId);
 		//randPointId = 9;
@@ -328,7 +314,11 @@ void createCenterPt(double *h_fluxMat, int nPts, int nRxns, double *h_centerPoin
 }
 
 void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h_N, double *d_Slin, cublasHandle_t handle){
-	//SVD method with N(A) is columns of U with sv=0 in svd(At)
+	/* GPU null space computation through full SVD with CUDA, the SVD is done on AtA because
+	CUDA requires m>=n. N(AtA)=N(A) is the columns of V corresponding to null singular values
+	Possibly a test can be done on the matrix size and the SVD can be done on At, the null 
+	space would span the columns of U corresponding to null singular values*/
+
 	// istart is the index of the first null sv (cuda sorts them)
 	int work_size=0;
 	int *devInfo, devInfo_h=0;

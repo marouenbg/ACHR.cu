@@ -12,7 +12,7 @@ switch modelName
         model=modeliAF1260;
     case 'putida'   
         load('Pputida_model_glc_min.mat')
-        warmupPts = csvread('P_putida.mpswarmup.csv');
+        warmupPts = csvread('P_Putida.mpswarmup.csv');
 end
 %addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio1262'));
 %changeCobraSolver('tomlab_cplex')
@@ -22,12 +22,9 @@ end
 
 %%
 clc
-tic;ACHRSamplerMOD(model,warmupPts,'trial',1,5000,100);toc;
+tic;ACHRSamplerMOD(model,warmupPts,'trial',2,5000,1000);toc;
 
-%%
 
-load ecoli_core_model;
-warmupPoints = csvread('Ecoli_core.mpswarmup.csv');
-ACHRSamplerMOD(model,warmupPoints,'test',1,1,10);
+
 
 
