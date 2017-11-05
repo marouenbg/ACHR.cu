@@ -19,7 +19,7 @@ GSLDIR        = /usr/include/gsl
 # ---------------------------------------------------------------------
 
 
-CC  = nvcc -ccbin clang++-3.8 -arch=sm_30 -lineinfo --use_fast_math --expt-relaxed-constexpr
+CC  = nvcc -ccbin clang++-3.8 -arch=sm_30 -lineinfo --use_fast_math
 #CC  = gcc -O0
 
 
@@ -63,7 +63,7 @@ EXSRCC        = $(EXDIR)/src/c
 EXSRCC        = ./
 
 
-CFLAGS  = $(COPT)  -I$(CPLEXINCDIR) -I$(INCLUDES) -I/usr/include/build_eigen
+CFLAGS  = $(COPT)  -I$(CPLEXINCDIR) -I$(INCLUDES)
 
 
 
