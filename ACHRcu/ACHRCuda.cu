@@ -1,9 +1,11 @@
+//STD
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 #include <ilcplex/cplex.h>
+//CUDA
 #include <cusolverDn.h>
 #include <cuda_runtime_api.h>
 #include "cuda_runtime.h"
@@ -13,26 +15,23 @@
 #include <ctype.h>
 #include <curand.h>
 #include <curand_kernel.h>
+//Thrust
 #include <thrust/sort.h>
 #include <thrust/execution_policy.h>
 #include <thrust/reduce.h>
 #include <thrust/extrema.h>
 #include <thrust/device_ptr.h>
-#include <math_functions.h>
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_multifit.h>
-
-#include <iostream>
 #include <thrust/transform_reduce.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <math_functions.h>
+//GSL
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_multifit.h>
+#include <iostream>
 #include <cmath>
 
-#include <thrust/iterator/counting_iterator.h>
-#include <thrust/copy.h>
-#include <thrust/functional.h>
-#include <thrust/device_vector.h>
 
 #define EPSILON 2.2204e-16 
 
@@ -136,15 +135,15 @@ __device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp
 	}
 }
 
-__device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int nMets, double *d_Slin_row, double *dev_max, double *rowVec, double *colVec, double *val, int nnz){
+__device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int nMets, double *dev_max, int *rowVec, int *colVec, double *val, int nnz){
 
 	int k, curRow;
 	k=0;
 	curRow=0;
 	for(int i=0;i<nMets;i++){
 		d_result[i]=0;
-		while(curRow==i && k<nnz){
-			d_result[i]+=val[k]*d_curPoint[(int)colVec[k]];
+		while(curRow==i){
+			d_result[i]+=val[k]*d_curPoint[colVec[k]];
 			k++;
 			if(k==nnz){
 				break;
@@ -155,7 +154,7 @@ __device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int 
 		d_result[i]=abs(d_result[i]);
 	}
 
-	double *dev_max_ptr = thrust::max_element(thrust::device,d_result, d_result + nMets);
+	double *dev_max_ptr = thrust::max_element(thrust::seq,d_result, d_result + nMets);
 	dev_max[0] = *dev_max_ptr;
 	
 }
@@ -185,7 +184,7 @@ __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int 
 		d_u[i]=d_fluxMat[i+randpointID*nRxns]-d_centerPoint[i];//fluxMAt call is d_randPoint
 	}
 
-	d_norm=std::sqrt( thrust::transform_reduce(thrust::device,d_u, d_u+nRxns, unary_op, init, binary_op) );
+	d_norm=std::sqrt( thrust::transform_reduce(thrust::seq,d_u, d_u+nRxns, unary_op, init, binary_op) );
 	
 	for(int i=0;i<nRxns;i++){
 		d_u[i]=d_u[i]/d_norm;
@@ -204,9 +203,9 @@ __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int 
 		}
 	}
 
-	double *d_min_ptr_dev = thrust::max_element(thrust::device,d_minStepVec, d_minStepVec + k);
+	double *d_min_ptr_dev = thrust::max_element(thrust::seq,d_minStepVec, d_minStepVec + k);
 	
-	double *d_max_ptr_dev = thrust::min_element(thrust::device,d_maxStepVec, d_maxStepVec + k);
+	double *d_max_ptr_dev = thrust::min_element(thrust::seq,d_maxStepVec, d_maxStepVec + k);
 
 	d_min_ptr[0] = *d_min_ptr_dev;
 	d_max_ptr[0] = *d_max_ptr_dev;
@@ -218,7 +217,7 @@ __device__ void createRandomVec(double *randVector, int stepsPerPoint, curandSta
 	}
 }
 
-__device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_Slin_row, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, double *rowVec, double *colVec, double *val, int nnz){
+__device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, int *rowVec, int *colVec, double *val, int nnz){
 	
 	int randPointId;
 	double d_u[1100];
@@ -246,8 +245,9 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 			continue;
 		}
 		advNextStep(d_prevPoint, d_curPoint, d_u, d_stepDist,nRxns);
+		
 		if(totalStepCount % 10 == 0){
-			findMaxAbs(nRxns, d_curPoint, d_distUb, nMets, d_Slin_row, dev_max, rowVec, colVec, val, nnz);
+			findMaxAbs(nRxns, d_curPoint, d_distUb, nMets, dev_max, rowVec, colVec, val, nnz);
 			if(*dev_max > 1e-9){
 				reprojectPoint(d_N,nRxns,istart,d_distLb,d_curPoint);//possibly do in memory the triple mat multiplication
 			}
@@ -264,7 +264,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	
 }
 
-__global__ void stepPointProgress(double *d_Slin_row,int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, double *rowVec, double *colVec, double *val, int nnz){
+__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *rowVec, int *colVec, double *val, int nnz){
 	int index = blockIdx.x * blockDim.x +threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
@@ -285,7 +285,7 @@ __global__ void stepPointProgress(double *d_Slin_row,int pointsPerFile, double *
 
 		for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
 			createRandomVec(d_randVector, stepsPerPoint, state);
-			createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_Slin_row,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,rowVec, colVec, val, nnz);
+			createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,rowVec, colVec, val, nnz);
 		}
 	}
 }
@@ -412,7 +412,9 @@ int main(int argc, char **argv){
 	double *cmatval;
 	double *h_ub, *h_lb, *d_ub, *d_lb;
 	double uTol = 1e-9, *points, *h_points;
-	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat, *d_Slin_row;
+	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat;
+	double *val;
+	//double *d_Slin_row;
 	double dTol = 1e-14;
 	double elapsedTime;
 	struct timespec now, tmstart;
@@ -421,12 +423,13 @@ int main(int argc, char **argv){
 	CPXENVptr env=NULL;
 	CPXLPptr lp=NULL;
 	int status, istart=0, row=0;
+	int *rowVec, *colVec;
 	int nWrmup=0;
 	int nRxns=0,nMets=0, nFiles, pointsPerFile, stepsPerPoint;
 	int nzcnt,surplus,surplusbis;
 	int *cmatbeg, *cmatind, totalCount;	
 	int buffer = 8196*128;
-	int nDevices;
+	int nDevices, nnz;
 	char filename[8196];
 	/*All matrices are stored in column major format, except points, stored in
 	row major format*/
@@ -488,7 +491,7 @@ int main(int argc, char **argv){
 	h_Slin=(double*)calloc(nMets*nRxns, sizeof(double));
 	gpuErrchk(cudaMalloc(&d_Slin, nRxns*nMets*sizeof(double)));
 	//populate the S matrix
-	int nnz=0;
+	nnz=0;
 	for(int j=0;j<nRxns;j++){
 		for(int i=cmatbeg[j];i<cmatbeg[j+1];i++){
 			h_Slin[j*nMets+cmatind[i]]=cmatval[i];
@@ -497,9 +500,8 @@ int main(int argc, char **argv){
 	}
 
 	//Transform into sparse format
-	double *rowVec, *colVec, *val;
-	rowVec=(double*)calloc(nnz, sizeof(double));
-	colVec=(double*)calloc(nnz, sizeof(double));
+	rowVec=(int*)calloc(nnz, sizeof(int));
+	colVec=(int*)calloc(nnz, sizeof(int));
 	val=(double*)calloc(nnz, sizeof(double));
 	nnz=0;
 	for(int i=0;i<nMets;i++){
@@ -513,8 +515,8 @@ int main(int argc, char **argv){
 		}
 
 	}
-	gpuErrchk(cudaMalloc(&rowVec, nnz*sizeof(double)));
-	gpuErrchk(cudaMalloc(&colVec, nnz*sizeof(double)));
+	gpuErrchk(cudaMalloc(&rowVec, nnz*sizeof(int)));
+	gpuErrchk(cudaMalloc(&colVec, nnz*sizeof(int)));
 	gpuErrchk(cudaMalloc(&val, nnz*sizeof(double)));
 
 
@@ -551,11 +553,6 @@ int main(int argc, char **argv){
 	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
-	double alpha=1.0, beta=0.0;
-
-	//declare d_slin_row
-	gpuErrchk(cudaMalloc(&d_Slin_row, nRxns*nMets*sizeof(double)));
-	cublasSafeCall(cublasDgeam(handle, CUBLAS_OP_T, CUBLAS_OP_N, nRxns, nMets, &alpha, d_Slin, nMets, &beta, NULL, nRxns, d_Slin_row, nRxns));
 
 	//Compute center point
 	h_centerPoint = (double *)malloc(nRxns*sizeof(double));
@@ -581,7 +578,7 @@ int main(int argc, char **argv){
 		printf("File %d\n",ii);
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
-		stepPointProgress<<<numBlocks, blockSize>>>(d_Slin_row,pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,rowVec, colVec, val, nnz);
+		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,rowVec, colVec, val, nnz);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
@@ -624,7 +621,7 @@ int main(int argc, char **argv){
 	cudaFree(d_ub);
 	cudaFree(d_lb);
 	cudaFree(points);
-	cudaFree(d_Slin_row);
+	//cudaFree(d_Slin_row);
 	cudaFree(d_fluxMat);
 	cudaFree(d_N);
 	//cudaFree(d_Slin);
