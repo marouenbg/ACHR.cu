@@ -363,8 +363,6 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 
         //Compute ST*S
 	cublasSafeCall(cublasDgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, nRxns, nRxns, nMets, &alpha, d_Slin, nMets, d_Slin_copy, nMets, &beta, d_SlinTS, nRxns));
-	cudaFree(d_Slin); //keep d_Slin in memory
-	cudaFree(d_Slin_copy);
 
 	//SVD of ST*S because N(S)=N(ST*S) is independant of size (SVD assumes m<n)	
 	gpuErrchk(cudaMalloc(&devInfo, sizeof(int)));
@@ -398,12 +396,17 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 	}
 
 	//free the memory
+	cudaFree(d_Slin); //keep d_Slin in memory
+	cudaFree(d_Slin_copy);
 	cudaFree(d_SlinTS);
 	cudaFree(d_V);
 	cudaFree(d_Vh);
 	cudaFree(d_U);
 	cudaFree(d_S);
 	cusolverDnDestroy(solver_handle);
+	//Host
+	free(h_S);
+	free(h_V);
 }
 
 int main(int argc, char **argv){
@@ -523,7 +526,6 @@ int main(int argc, char **argv){
 	//Transfer ub and lb and Slin
 	gpuErrchk(cudaMemcpy(d_ub,h_ub,nRxns*sizeof(double),cudaMemcpyHostToDevice));	
 	gpuErrchk(cudaMemcpy(d_lb,h_lb,nRxns*sizeof(double),cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice));
 	CPXfreeprob(env,&lp);
 	CPXcloseCPLEX(&env);
 
@@ -549,7 +551,8 @@ int main(int argc, char **argv){
 
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
-	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
+	/*gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
+	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory*/
 	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
