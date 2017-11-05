@@ -234,12 +234,12 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_stepDist, dev_max[1], alpha, beta;
 
 	while(stepCount < stepsPerPoint){
-		//randPointId = ceil(nWrmup*(double)curand_uniform(&state));
+		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
 		//printf("randPoint id is %d \n",randPointId);
-		randPointId = 9;
+		//randPointId = 9;
 		fillrandPoint(d_fluxMat, randPointId, nRxns, nWrmup, d_centerPointTmp, d_u, d_distUb, d_distLb, d_ub, d_lb, d_prevPoint, d_pos, dTol, uTol, d_pos_max, d_pos_min, d_maxStepVec, d_minStepVec, d_min_ptr, d_max_ptr);
-		//d_stepDist=(d_randVector[stepCount])*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
-		d_stepDist=(0.5)*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
+		d_stepDist=(d_randVector[stepCount])*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
+		//d_stepDist=(0.5)*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
 		//printf("min is %f max is %f step is %f \n",d_min_ptr[0],d_max_ptr[0],d_stepDist);
 		if ( ((abs(*d_min_ptr) < maxMinTol) && (abs(*d_max_ptr) < maxMinTol)) || (*d_min_ptr > *d_max_ptr) ){ 
 			//nMisses++;
