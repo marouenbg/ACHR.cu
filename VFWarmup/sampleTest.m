@@ -1,5 +1,5 @@
 %cd('P:\Projects\cudaSampler')
-modelName ='putida';
+modelName ='ecoli_core';
 switch modelName
     case 'ecoli_core'
         load Ecoli_core_model;
@@ -22,7 +22,7 @@ end
 
 %%
 clc
-tic;ACHRSamplerMOD(model,warmupPts,'trial',2,5000,1000);toc;
+tic;ACHRSamplerMOD(model,warmupPts,'trial',1,1,1);toc;
 
 
 
