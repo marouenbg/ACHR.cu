@@ -34,6 +34,7 @@
 
 
 #define EPSILON 2.2204e-16 
+#define NLOCALMEM 1100
 
 struct non_negative
 {
@@ -220,14 +221,14 @@ __device__ void createRandomVec(double *randVector, int stepsPerPoint, curandSta
 __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, int *rowVec, int *colVec, double *val, int nnz){
 	
 	int randPointId;
-	double d_u[15000];
-	double d_distUb[15000];
-	double d_distLb[15000];
-	double d_curPoint[15000];
+	double d_u[NLOCALMEM];
+	double d_distUb[NLOCALMEM];
+	double d_distLb[NLOCALMEM];
+	double d_curPoint[NLOCALMEM];
 	//double d_result[1100];becomes d_distUb
 	//double d_tmp[1100];becomes d_distLB
-	double d_maxStepVec[30000];
-	double d_minStepVec[30000];
+	double d_maxStepVec[NLOCALMEM*2];
+	double d_minStepVec[NLOCALMEM*2];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, dev_max[1], alpha, beta;
@@ -270,7 +271,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		double d_prevPoint[15000], d_centerPointTmp[15000], d_randVector[15000];
+		double d_prevPoint[NLOCALMEM], d_centerPointTmp[NLOCALMEM], d_randVector[NLOCALMEM];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
