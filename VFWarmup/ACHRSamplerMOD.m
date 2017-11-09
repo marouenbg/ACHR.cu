@@ -77,8 +77,8 @@ for i = 1:nFiles
         while (stepCount <= stepsPerPoint)
             
             % Pick a random warmup point
-            %randPointID = ceil(nWrmup*rand);
-            randPointID=10;
+            randPointID = ceil(nWrmup*rand);
+            %randPointID=10;
             randPoint = warmupPoints(:,randPointID);
 
             % Get a direction from the center point to the warmup point
@@ -125,8 +125,8 @@ for i = 1:nFiles
 
             % Pick a rand out of list_of_rands and use it to get a random
             % step distance
-            %stepDist = randVector(stepCount)*(maxStep-minStep)+minStep;
-            stepDist = 0.5*(maxStep-minStep)+minStep;
+            stepDist = randVector(stepCount)*(maxStep-minStep)+minStep;
+            %stepDist = 0.5*(maxStep-minStep)+minStep;
 
             % Advance to the next point
             curPoint = prevPoint + stepDist*u;
@@ -192,7 +192,6 @@ for i = 1:nFiles
 
         % Add the current point to points
         points(:,pointCount) = curPoint;
-        curPoint
         pointCount = pointCount + 1;
 
     end % Points per cycle

@@ -1,5 +1,5 @@
 %cd('P:\Projects\cudaSampler')
-modelName ='ecoli_core';
+modelName ='ematrix';
 switch modelName
     case 'ecoli_core'
         load Ecoli_core_model;
@@ -7,6 +7,7 @@ switch modelName
         warmupPts = csvread('Ecoli_core.mpswarmup.csv');
     case 'ematrix'
         load('Thiele et al. - E-matrix_LB_medium.mat'); 
+        warmupPts = csvread('Ematrix.mpswarmup.csv');
     case 'ecoli_k12'
         load('iAF1260.mat');
         model=modeliAF1260;
@@ -22,7 +23,7 @@ end
 
 %%
 clc
-tic;ACHRSamplerMOD(model,warmupPts,'trial',1,1,1);toc;
+tic;ACHRSamplerMOD(model,warmupPts,'trial',1,1000,1000);toc;
 
 
 
