@@ -417,7 +417,7 @@ int main(int argc, char **argv){
 	double *h_ub, *h_lb, *d_ub, *d_lb;
 	double uTol = 1e-9, *points, *h_points;
 	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat;
-	double *val;
+	double *d_val, *h_val;
 	//double *d_Slin_row;
 	double dTol = 1e-14;
 	double elapsedTime;
@@ -427,7 +427,7 @@ int main(int argc, char **argv){
 	CPXENVptr env=NULL;
 	CPXLPptr lp=NULL;
 	int status, istart=0, row=0;
-	int *rowVec, *colVec;
+	int *h_rowVec, *h_colVec, *d_rowVec, *d_colVec;
 	int nWrmup=0;
 	int nRxns=0,nMets=0, nFiles, pointsPerFile, stepsPerPoint;
 	int nzcnt,surplus,surplusbis;
@@ -504,25 +504,27 @@ int main(int argc, char **argv){
 	}
 
 	//Transform into sparse format
-	rowVec=(int*)calloc(nnz, sizeof(int));
-	colVec=(int*)calloc(nnz, sizeof(int));
-	val=(double*)calloc(nnz, sizeof(double));
+	h_rowVec=(int*)calloc(nnz, sizeof(int));
+	h_colVec=(int*)calloc(nnz, sizeof(int));
+	h_val=(double*)calloc(nnz, sizeof(double));
 	nnz=0;
 	for(int i=0;i<nMets;i++){
 		for(int j=0;j<nRxns;j++){
 			if(h_Slin[i+j*nMets]!=0){
-				rowVec[nnz]=i;
-				colVec[nnz]=j;
-				val[nnz]=h_Slin[i+j*nMets];
+				h_rowVec[nnz]=i;
+				h_colVec[nnz]=j;
+				h_val[nnz]=h_Slin[i+j*nMets];
 				nnz++;
 			}
 		}
 
 	}
-	gpuErrchk(cudaMalloc(&rowVec, nnz*sizeof(int)));
-	gpuErrchk(cudaMalloc(&colVec, nnz*sizeof(int)));
-	gpuErrchk(cudaMalloc(&val, nnz*sizeof(double)));
-
+	gpuErrchk(cudaMalloc(&d_rowVec, nnz*sizeof(int)));
+	gpuErrchk(cudaMalloc(&d_colVec, nnz*sizeof(int)));
+	gpuErrchk(cudaMalloc(&d_val, nnz*sizeof(double)));
+	gpuErrchk(cudaMemcpy(d_rowVec,h_rowVec,nnz*sizeof(int),cudaMemcpyHostToDevice));	
+	gpuErrchk(cudaMemcpy(d_colVec,h_colVec,nnz*sizeof(int),cudaMemcpyHostToDevice));	
+	gpuErrchk(cudaMemcpy(d_val,h_val,nnz*sizeof(double),cudaMemcpyHostToDevice));	
 
 	//Transfer ub and lb and Slin
 	gpuErrchk(cudaMemcpy(d_ub,h_ub,nRxns*sizeof(double),cudaMemcpyHostToDevice));	
@@ -552,8 +554,8 @@ int main(int argc, char **argv){
 
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
-	/*gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
-	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory*/
+	//gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
+	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
 	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
@@ -582,7 +584,7 @@ int main(int argc, char **argv){
 		printf("File %d\n",ii);
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
-		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,rowVec, colVec, val, nnz);
+		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
@@ -618,6 +620,9 @@ int main(int argc, char **argv){
 	free(h_points);
 	free(h_Slin);
 	free(h_N);
+	free(h_colVec);
+	free(h_rowVec);
+	free(h_val);
 
 	//Free cuda memory
 	cudaFree(d_centerPoint);
@@ -629,6 +634,9 @@ int main(int argc, char **argv){
 	cudaFree(d_fluxMat);
 	cudaFree(d_N);
 	//cudaFree(d_Slin);
+	cudaFree(d_colVec);
+	cudaFree(d_rowVec);
+	cudaFree(d_val);
 
 	return 0;
 }//main
