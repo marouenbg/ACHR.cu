@@ -583,6 +583,7 @@ int main(int argc, char **argv){
 	for(int ii=0;ii<nFiles;ii++){
 		printf("File %d\n",ii);
 		//Initialize points matrix to zero
+		cudaDeviceSynchronize();
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
 		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz);
 		cudaDeviceSynchronize();
