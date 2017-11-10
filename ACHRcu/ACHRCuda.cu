@@ -37,6 +37,38 @@
 #define NLOCALMEM 1100
 #define DLOCALMEM 2200
 
+
+void computeKernelQRSeq(int nRxns, int nMets, double *S, double *h_N){
+	gsl_matrix * A      = gsl_matrix_alloc(nMets,nRxns);
+
+	//copy S in gsl format
+	for(int j=0;j<nRxns;j++){
+		for(int i=0;i<nMets;i++){
+			gsl_matrix_set(A,i,j,S[i+j*nMets]);
+		}
+	}
+	//declare SVD variables
+	gsl_matrix * AtA  = gsl_matrix_alloc(nRxns,nRxns); 
+	gsl_matrix * Q  = gsl_matrix_alloc(nRxns,nRxns); 
+	gsl_matrix * R  = gsl_matrix_alloc(nRxns,nRxns); 
+	gsl_vector * work = gsl_vector_alloc(nRxns);
+	gsl_vector * tau = gsl_vector_alloc(nRxns);
+	gsl_blas_dgemm(CblasTrans, CblasNoTrans,1.0, A, A,0.0, AtA);
+
+	//QR of AtA
+	gsl_linalg_QR_decomp(AtA, tau);
+	gsl_linalg_QR_unpack (AtA, tau, Q, R);
+
+	int k=0;
+	for(int j=0;j<nRxns;j++){
+		for(int i=0;i<nRxns;i++){
+			h_N[k] = gsl_matrix_get(Q,i,j);
+			k++;
+		}
+	}
+
+}
+
 void computeKernelQRCuda(int nRxns, int nMets, double *d_Slin, cublasHandle_t handle, double *h_N){
 	int work_size=0;
 	int *devInfo;
@@ -598,7 +630,8 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
 	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
 	//computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
-	computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
+	//computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
+	computeKernelQRSeq(nRxns, nMets, h_Slin, h_N);
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
 
