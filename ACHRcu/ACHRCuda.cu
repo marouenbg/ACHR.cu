@@ -140,22 +140,7 @@ __device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp
 __device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int nMets, double *dev_max, int *d_rowVec, int *d_colVec, double *d_val, int nnz){
 
 	int k;
-	/*int k, curRow;
-	k=0;
-	curRow=0;
-	for(int i=0;i<nMets;i++){
-		d_result[i]=0;
-		while(curRow==i){
-			d_result[i]+=val[k]*d_curPoint[colVec[k]];
-			k++;
-			if(k==nnz){
-				break;
-			}else{
-				curRow=rowVec[k];
-			}
-		}
-		d_result[i]=abs(d_result[i]);
-	}*/
+
 	for(k=0;k<nMets;k++){
 		d_result[k]=0;
 	}
