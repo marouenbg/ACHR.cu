@@ -37,6 +37,52 @@
 #define NLOCALMEM 1100
 #define DLOCALMEM 2200
 
+void computeKernelQRCuda(int nRxns, int nMets, double *d_Slin, cublasHandle_t handle, double *h_N){
+	int work_size=0;
+	int *devInfo;
+	double *work;
+	double *d_SlinTS, *d_Slin_copy;
+	double alpha =1.0, beta=0.0, *d_TAU;
+	gpuErrchk(cudaMalloc(&d_Slin_copy, nRxns*nMets*sizeof(double)));
+	gpuErrchk(cudaMemcpy(d_Slin_copy,d_Slin,nRxns*nMets*sizeof(double),cudaMemcpyDeviceToDevice));
+	gpuErrchk(cudaMalloc(&d_SlinTS, nRxns*nRxns*sizeof(double)));
+	gpuErrchk(cudaMalloc(&d_TAU, nRxns*sizeof(double)));
+
+        //Compute ST*S
+	cublasSafeCall(cublasDgemm(handle, CUBLAS_OP_T, CUBLAS_OP_N, nRxns, nRxns, nMets, &alpha, d_Slin, nMets, d_Slin_copy, nMets, &beta, d_SlinTS, nRxns));
+
+	//Init cusolver
+	gpuErrchk(cudaMalloc(&devInfo, sizeof(int)));
+	cusolverDnHandle_t solver_handle;
+	cusolverDnCreate(&solver_handle);
+	
+	//Init memory
+	cusolveSafeCall(cusolverDnDgeqrf_bufferSize(solver_handle, nRxns, nRxns, d_SlinTS,nRxns,&work_size));
+	gpuErrchk(cudaMalloc(&work, work_size*sizeof(double)));
+
+	//QR
+	cusolveSafeCall(cusolverDnDgeqrf(solver_handle,nRxns,nRxns,d_SlinTS,nRxns,d_TAU,work,work_size,devInfo));
+	int devInfo_h = 0;	gpuErrchk(cudaMemcpy(&devInfo_h, devInfo, sizeof(int), cudaMemcpyDeviceToHost));
+	if (devInfo_h != 0) std::cout	<< "Unsuccessful gerf execution\n\n";
+
+	// --- Initializing the output Q matrix (Of course, this step could be done by a kernel function directly on the device)
+	double *h_Q = (double *)malloc(nRxns*nRxns*sizeof(double));
+	for(int j = 0; j < nRxns; j++)
+		for(int i = 0; i < nRxns; i++)
+			if (j == i) h_Q[j + i*nRxns] = 1.;
+			else		h_Q[j + i*nRxns] = 0.;
+
+	double *d_Q;			gpuErrchk(cudaMalloc(&d_Q, nRxns*nRxns*sizeof(double)));
+	gpuErrchk(cudaMemcpy(d_Q, h_Q, nRxns*nRxns*sizeof(double), cudaMemcpyHostToDevice));
+
+	cusolveSafeCall(cusolverDnDormqr(solver_handle, CUBLAS_SIDE_LEFT, CUBLAS_OP_N, nRxns, nRxns, nRxns, d_SlinTS, nRxns, d_TAU, d_Q, nRxns, work, work_size, devInfo));
+	
+	gpuErrchk(cudaMemcpy(h_N, d_Q, nRxns * nRxns * sizeof(double), cudaMemcpyDeviceToHost));
+
+	//free the memory
+	cusolverDnDestroy(solver_handle);
+}
+
 struct non_negative
 {
     __host__ __device__
@@ -549,9 +595,10 @@ int main(int argc, char **argv){
 
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
-	//gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
+	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
 	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
-	computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
+	//computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
+	computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
 
