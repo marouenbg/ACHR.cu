@@ -35,6 +35,7 @@
 
 #define EPSILON 2.2204e-16 
 #define NLOCALMEM 1100
+#define DLOCALMEM 2200
 
 struct non_negative
 {
@@ -234,8 +235,8 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_curPoint[NLOCALMEM];
 	double d_result[NLOCALMEM];//becomes d_distUb
 	//double d_tmp[1100];becomes d_distLB
-	double d_maxStepVec[NLOCALMEM*2];
-	double d_minStepVec[NLOCALMEM*2];
+	double d_maxStepVec[DLOCALMEM];
+	double d_minStepVec[DLOCALMEM];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, dev_max[1], alpha, beta;
@@ -268,6 +269,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		stepCount++;
 		totalStepCount++;
 	}
+	//printf("cur point 0 is %f \n", d_curPoint[0]);
 	addPoint(pointCount, points, d_curPoint, pointsPerFile, nRxns);
 	
 }
