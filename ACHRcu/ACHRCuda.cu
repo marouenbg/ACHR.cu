@@ -34,8 +34,8 @@
 
 
 #define EPSILON 2.2204e-16 
-#define NLOCALMEM 1100
-#define DLOCALMEM 2200
+#define NLOCALMEM 1000
+#define DLOCALMEM 2000
 
 
 void computeKernelQRSeq(int nRxns, int nMets, double *S, double *h_N){
@@ -295,21 +295,21 @@ __device__ void createRandomVec(double *randVector, int stepsPerPoint, curandSta
 __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, int *d_rowVec, int *d_colVec, double *d_val, int nnz){
 	
 	int randPointId;
-	double d_u[NLOCALMEM];
-	double d_distUb[NLOCALMEM];
-	double d_distLb[NLOCALMEM];
-	double d_curPoint[NLOCALMEM];
-	double d_result[NLOCALMEM];//becomes d_distUb
+	double d_u[10000];
+	double d_distUb[10000];
+	double d_distLb[10000];
+	double d_curPoint[10000];
+	double d_result[10000];//becomes d_distUb
 	//double d_tmp[1100];becomes d_distLB
-	double d_maxStepVec[DLOCALMEM];
-	double d_minStepVec[DLOCALMEM];
+	double d_maxStepVec[20000];
+	double d_minStepVec[20000];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, dev_max[1], alpha, beta;
 
 	while(stepCount < stepsPerPoint){
-		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
-		//printf("randPoint id is %d \n",randPointId);
+		//randPointId = ceil(nWrmup*(double)curand_uniform(&state));
+		printf("randPoint id is %d \n",randPointId);
 		//randPointId = 9;
 		fillrandPoint(d_fluxMat, randPointId, nRxns, nWrmup, d_centerPointTmp, d_u, d_distUb, d_distLb, d_ub, d_lb, d_prevPoint, d_pos, dTol, uTol, d_pos_max, d_pos_min, d_maxStepVec, d_minStepVec, d_min_ptr, d_max_ptr);
 		d_stepDist=(d_randVector[stepCount])*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
@@ -346,7 +346,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		double d_prevPoint[NLOCALMEM], d_centerPointTmp[NLOCALMEM], d_randVector[NLOCALMEM];
+		double d_prevPoint[10000], d_centerPointTmp[10000], d_randVector[10000];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
@@ -631,10 +631,10 @@ int main(int argc, char **argv){
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
 	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
-	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
+	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
 	//computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
-	istart=0;
-	computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
+	//istart=0;
+	//computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
 	//computeKernelQRSeq(nRxns, nMets, h_Slin, h_N);
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));

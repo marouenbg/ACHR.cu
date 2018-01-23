@@ -19,7 +19,7 @@ GSLDIR        = /usr/include/gsl
 # ---------------------------------------------------------------------
 
 
-CC  = nvcc -ccbin clang++-3.8 -arch=sm_30 -lineinfo --use_fast_math
+CC  = nvcc -Xptxas="-v" -ccbin clang++-3.8 -arch=sm_30 -lineinfo --use_fast_math
 #CC  = gcc -O0
 
 
