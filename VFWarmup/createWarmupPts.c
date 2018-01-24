@@ -133,7 +133,7 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 			#pragma omp for schedule(dynamic,chunk) collapse(2) nowait
 				for(j=+1;j>-2;j-=2){
 					for(i=rank*nPts/numprocs;i<(rank+1)*nPts/numprocs;i++){
-						while(solstat == 0){
+						while(solstat != 1){
 							status = CPXchgobj (env, lpi, n, indices, values);//turn all coeffs to zero
 							if(i<n){
 								status = CPXchgobjsen (env, lpi, j);
