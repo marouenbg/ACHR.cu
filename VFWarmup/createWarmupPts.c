@@ -131,8 +131,8 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 			srand((unsigned int)(time(NULL)) ^ omp_get_thread_num());
 
 			#pragma omp for schedule(dynamic,chunk) collapse(2) nowait
-				for(j=+1;j>-2;j-=2){
-					for(i=rank*nPts/numprocs;i<(rank+1)*nPts/numprocs;i++){
+				for(i=rank*nPts/numprocs;i<(rank+1)*nPts/numprocs;i++){
+					for(j=+1;j>-2;j-=2){
 						while(solstat != 1){
 							status = CPXchgobj (env, lpi, n, indices, values);//turn all coeffs to zero
 							if(i<n){
@@ -191,7 +191,7 @@ int main (int argc, char **argv){
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	FILE *fp;
 	char fileName[100] = "warmup.csv";
-	char modelName[100];
+	char modelName[100], nPtsStr[10];
 	double *centPt = NULL; // initialize center point
 	
 	/*Initialize MPI*/
@@ -319,7 +319,10 @@ int main (int argc, char **argv){
 	}*/
 	
 	/*Save to csv file*/
-	strcat(modelName, fileName);
+	//itoa(nPts, nPtsStr, 10);
+	//strcat(nPtsStr, ".csv");
+	//strcat(modelName, fileName);
+	sprintf(modelName,"%s%d%s",modelName,nPts,fileName);
 	fp=fopen(modelName,"w+");
 	if(rank==0){
 		for(i=0;i<n;i++){
