@@ -206,14 +206,11 @@ __device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp
 	for(int i=0;i<nRxns-istart;i++){
 		d_tmp[i]=0;
 		for(int j=0;j<nRxns;j++){
+			points[pointCount+pointsPerFile*j]=0;
 			d_tmp[i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
-		}
-	}
-	
-	for(int i=0;i<nRxns;i++){
-		points[pointCount+pointsPerFile*i]=0;
-		for(int j=0;j<nRxns-istart;j++){
-			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_tmp[j];//here N*tmp
+			for(int k=0;k<nRxns-istart;k++){
+				points[pointCount+pointsPerFile*j]+=d_N[k*nRxns+j]*d_tmp[k];//here N*tmp
+			}
 		}
 	}
 }
@@ -233,12 +230,6 @@ __device__ void findMaxAbs(int nRxns, double *d_result, int nMets, double *dev_m
 	dev_max[0] = *dev_max_ptr;
 	
 }
-
-/*__device__ void addPoint(int pointCount,double *points,double *d_curPoint, int pointsPerFile, int nRxns){
-	for(int i=0;i<nRxns;i++){//in row major format (everything else is column major)
-			points[pointCount+pointsPerFile*i]=d_curPoint[i];
-		}
-}*/
 
 __device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
 	for(int i=0;i<nRxns;i++){
