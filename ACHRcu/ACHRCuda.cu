@@ -319,6 +319,9 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 			//nMisses++;
 			continue;
 		}
+		for(int i=0;i<nRxns;i++){
+			printf("%f \n",points[pointCount+pointsPerFile*i]);
+		}
 		advNextStep(d_prevPoint, d_u, d_stepDist, nRxns, points, pointsPerFile, pointCount);
 		
 		if(totalStepCount % 10 == 0){
