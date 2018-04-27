@@ -295,20 +295,20 @@ __device__ void createRandomVec(double *randVector, int stepsPerPoint, curandSta
 __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, int *d_rowVec, int *d_colVec, double *d_val, int nnz){
 	
 	int randPointId;
-	double d_u[10000];
-	double d_distUb[10000];
-	double d_distLb[10000];
+	double d_u[100];
+	double d_distUb[100];
+	double d_distLb[100];
 	//double d_curPoint[10000];
-	double d_result[10000];//becomes d_distUb
+	double d_result[100];//becomes d_distUb
 	//double d_tmp[1100];becomes d_distLB
-	double d_maxStepVec[20000];
-	double d_minStepVec[20000];
+	double d_maxStepVec[200];
+	double d_minStepVec[200];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, dev_max[1], alpha, beta;
 
 	while(stepCount < stepsPerPoint){
-		//randPointId = ceil(nWrmup*(double)curand_uniform(&state));
+		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
 		printf("randPoint id is %d \n",randPointId);
 		//randPointId = 9;
 		fillrandPoint(d_fluxMat, randPointId, nRxns, nWrmup, d_centerPointTmp, d_u, d_distUb, d_distLb, d_ub, d_lb, d_prevPoint, d_pos, dTol, uTol, d_pos_max, d_pos_min, d_maxStepVec, d_minStepVec, d_min_ptr, d_max_ptr);
@@ -318,9 +318,6 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		if ( ((abs(*d_min_ptr) < maxMinTol) && (abs(*d_max_ptr) < maxMinTol)) || (*d_min_ptr > *d_max_ptr) ){ 
 			//nMisses++;
 			continue;
-		}
-		for(int i=0;i<nRxns;i++){
-			printf("%f \n",points[pointCount+pointsPerFile*i]);
 		}
 		advNextStep(d_prevPoint, d_u, d_stepDist, nRxns, points, pointsPerFile, pointCount);
 		
@@ -349,7 +346,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		double d_prevPoint[10000], d_centerPointTmp[10000], d_randVector[10000];
+		double d_prevPoint[100], d_centerPointTmp[100], d_randVector[1000];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
