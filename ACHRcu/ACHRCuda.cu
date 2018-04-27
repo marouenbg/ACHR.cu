@@ -201,16 +201,20 @@ __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_p
 
 }
 
-__device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp, double *points, int pointsPerFile, int pointCount){
+__device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount, int index){
 
 	for(int i=0;i<nRxns-istart;i++){
-		d_tmp[i]=0;
+		d_umat[nRxns*index+i]=0;//d_umat now is d_tmp
 		for(int j=0;j<nRxns;j++){
 			points[pointCount+pointsPerFile*j]=0;
-			d_tmp[i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
-			for(int k=0;k<nRxns-istart;k++){
-				points[pointCount+pointsPerFile*j]+=d_N[k*nRxns+j]*d_tmp[k];//here N*tmp
-			}
+			d_umat[nRxns*index+i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
+		}
+	}
+
+	for(int i=0;i<nRxns;i++){
+		points[pointCount+pointsPerFile]=0;
+		for(int j=0;j<nRxns-istart;j++){
+			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_umat[nRxns*index+j];//here N*tmp
 		}
 	}
 }
@@ -315,7 +319,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		if(totalStepCount % 10 == 0){
 			findMaxAbs(nRxns, d_result, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount);
 			if(*dev_max > 1e-9){
-				reprojectPoint(d_N,nRxns,istart,d_distLb,points,pointsPerFile,pointCount);//possibly do in memory the triple mat multiplication
+				reprojectPoint(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
 			}
 		}
 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
