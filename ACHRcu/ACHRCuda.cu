@@ -187,38 +187,38 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	gsl_matrix_free(V);
 }
 
-__device__ void correctBounds(double *d_curPoint, double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint){
+__device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount){
 
 	for(int i=0;i<nRxns ;i++){
-		if(d_curPoint[i]>d_ub[i]){
-			d_curPoint[i]=d_ub[i];
-		}else if(d_curPoint[i]<d_lb[i]){
-			d_curPoint[i]=d_lb[i];
+		if(points[pointCount+pointsPerFile*i]>d_ub[i]){
+			points[pointCount+pointsPerFile*i]=d_ub[i];
+		}else if(points[pointCount+pointsPerFile*i]<d_lb[i]){
+			points[pointCount+pointsPerFile*i]=d_lb[i];
 		}
-		d_prevPoint[i]=d_curPoint[i];
-		d_centerPoint[i]=alpha*d_centerPoint[i]+beta*d_curPoint[i];
+		d_prevPoint[i]=points[pointCount+pointsPerFile*i];
+		d_centerPoint[i]=alpha*d_centerPoint[i]+beta*points[pointCount+pointsPerFile*i];
 	}
 
 }
 
-__device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp, double *d_curPoint){
+__device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_tmp, double *points, int pointsPerFile, int pointCount){
 
 	for(int i=0;i<nRxns-istart;i++){
 		d_tmp[i]=0;
 		for(int j=0;j<nRxns;j++){
-			d_tmp[i]+=d_N[j+i*nRxns]*d_curPoint[j];//here t(N)*Pt
+			d_tmp[i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
 		}
 	}
 	
 	for(int i=0;i<nRxns;i++){
-		d_curPoint[i]=0;
+		points[pointCount+pointsPerFile*i]=0;
 		for(int j=0;j<nRxns-istart;j++){
-			d_curPoint[i]+=d_N[j*nRxns+i]*d_tmp[j];//here N*tmp
+			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_tmp[j];//here N*tmp
 		}
 	}
 }
 
-__device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int nMets, double *dev_max, int *d_rowVec, int *d_colVec, double *d_val, int nnz){
+__device__ void findMaxAbs(int nRxns, double *d_result, int nMets, double *dev_max, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *points, int pointsPerFile, int pointCount){
 
 	int k;
 
@@ -226,7 +226,7 @@ __device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int 
 		d_result[k]=0;
 	}
 	for(k=0;k<nnz;k++){
-		d_result[d_rowVec[k]]+=d_val[k]*d_curPoint[d_colVec[k]];
+		d_result[d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
 	}
 
 	double *dev_max_ptr = thrust::max_element(thrust::seq,d_result, d_result + nMets);
@@ -234,15 +234,15 @@ __device__ void findMaxAbs(int nRxns, double *d_curPoint, double *d_result, int 
 	
 }
 
-__device__ void addPoint(int pointCount,double *points,double *d_curPoint, int pointsPerFile, int nRxns){
+/*__device__ void addPoint(int pointCount,double *points,double *d_curPoint, int pointsPerFile, int nRxns){
 	for(int i=0;i<nRxns;i++){//in row major format (everything else is column major)
 			points[pointCount+pointsPerFile*i]=d_curPoint[i];
 		}
-}
+}*/
 
-__device__ void advNextStep(double *d_prevPoint, double *d_curPoint, double *d_u, double d_stepDist, int nRxns){
+__device__ void advNextStep(double *d_prevPoint, double *d_u, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount){
 	for(int i=0;i<nRxns;i++){
-		d_curPoint[i]=d_prevPoint[i]+d_stepDist*d_u[i];
+		points[pointCount+pointsPerFile*i]=d_prevPoint[i]+d_stepDist*d_u[i];
 	}
 }
 
@@ -298,7 +298,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_u[10000];
 	double d_distUb[10000];
 	double d_distLb[10000];
-	double d_curPoint[10000];
+	//double d_curPoint[10000];
 	double d_result[10000];//becomes d_distUb
 	//double d_tmp[1100];becomes d_distLB
 	double d_maxStepVec[20000];
@@ -319,24 +319,24 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 			//nMisses++;
 			continue;
 		}
-		advNextStep(d_prevPoint, d_curPoint, d_u, d_stepDist,nRxns);
+		advNextStep(d_prevPoint, d_u, d_stepDist, nRxns, points, pointsPerFile, pointCount);
 		
 		if(totalStepCount % 10 == 0){
-			findMaxAbs(nRxns, d_curPoint, d_result, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz);
+			findMaxAbs(nRxns, d_result, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount);
 			if(*dev_max > 1e-9){
-				reprojectPoint(d_N,nRxns,istart,d_distLb,d_curPoint);//possibly do in memory the triple mat multiplication
+				reprojectPoint(d_N,nRxns,istart,d_distLb,points,pointsPerFile,pointCount);//possibly do in memory the triple mat multiplication
 			}
 		}
 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
 		
-		correctBounds(d_curPoint, d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp);
+		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount);
 		
 		stepCount++;
 		totalStepCount++;
 	}
 	//printf("cur point 0 is %f \n", d_curPoint[0]);
-	addPoint(pointCount, points, d_curPoint, pointsPerFile, nRxns);
+	//addPoint(pointCount, points, d_curPoint, pointsPerFile, nRxns);
 	
 }
 

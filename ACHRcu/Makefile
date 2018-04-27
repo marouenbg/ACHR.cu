@@ -42,7 +42,8 @@ CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 CCLNDIRS  = -L$(CPLEXLIBDIR) -L$(CONCERTLIBDIR)
 CLNDIRS   = -L$(CPLEXLIBDIR)
 CCLNFLAGS = -lm -lpthread -lconcert -lilocplex -lcplex
-CLNFLAGS  = -lm -lpthread -lrt -lcplex -lcusolver -lcublas Utilities.cu -lcurand -lgsl -lgslcblas
+CLNFLAGS  = -lm -lpthread -lrt -lcplex -lcusolver -lcublas Utilities.cu -lcurand -lgsl -lgslcblas 
+#-lcudavert
 
 
 
