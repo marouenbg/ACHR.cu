@@ -206,13 +206,12 @@ __device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_uma
 	for(int i=0;i<nRxns-istart;i++){
 		d_umat[nRxns*index+i]=0;//d_umat now is d_tmp
 		for(int j=0;j<nRxns;j++){
-			points[pointCount+pointsPerFile*j]=0;
 			d_umat[nRxns*index+i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
 		}
 	}
 
 	for(int i=0;i<nRxns;i++){
-		points[pointCount+pointsPerFile]=0;
+		points[pointCount+pointsPerFile*i]=0;
 		for(int j=0;j<nRxns-istart;j++){
 			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_umat[nRxns*index+j];//here N*tmp
 		}
