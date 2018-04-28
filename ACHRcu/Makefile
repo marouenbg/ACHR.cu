@@ -9,9 +9,9 @@ LIBFORMAT  = static_pic
 #
 #------------------------------------------------------------
 
-CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
+#CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 GSLDIR        = /usr/include/gsl
-#CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
+CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
 #CONCERTDIR    = ../../../../concert
 
 # ---------------------------------------------------------------------
@@ -19,7 +19,7 @@ GSLDIR        = /usr/include/gsl
 # ---------------------------------------------------------------------
 
 
-CC  = nvcc -Xptxas="-v" -ccbin clang++-3.8 -arch=sm_35 -lineinfo --use_fast_math -rdc=true
+CC  = nvcc -Xptxas="-v" -arch=sm_35 -lineinfo --use_fast_math -rdc=true
 #CC  = gcc -O0
 
 

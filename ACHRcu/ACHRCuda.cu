@@ -212,7 +212,7 @@ __global__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_uma
 		}
 	}
 
-	for(int i=0;i<nRxns;i++){
+	for(int i=newindex;i<nRxns;i+=stride){
 		points[pointCount+pointsPerFile*i]=0;
 		for(int j=0;j<nRxns-istart;j++){
 			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_umat[nRxns*index+j];//here N*tmp
@@ -344,7 +344,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
 		double d_prevPoint[100];
-		double d_centerPointTmp[100], d_randVector[1000];
+		double d_centerPointTmp[100], d_randVector[100];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
@@ -645,7 +645,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_fluxMat, nRxns*nWrmup*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_fluxMat,h_fluxMat,nRxns*nWrmup*sizeof(double), cudaMemcpyHostToDevice));
 	//d_umat is column-major format
-	int blockSize=64, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
+	int blockSize=128, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
 	gpuErrchk(cudaMalloc(&d_umat, nRxns*blockSize*sizeof(double)));//put the correct number of threads
 	gpuErrchk(cudaMalloc(&points, nRxns*pointsPerFile*sizeof(double)));
 
