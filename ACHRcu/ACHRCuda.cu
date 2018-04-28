@@ -321,7 +321,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		if(totalStepCount % 10 == 0){
 			findMaxAbs(nRxns, d_result, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount);
 			if(*dev_max > 1e-9){
-				reprojectPoint<<<1,16>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+				reprojectPoint<<<1,8>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
 			}
 		}
 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
@@ -645,7 +645,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_fluxMat, nRxns*nWrmup*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_fluxMat,h_fluxMat,nRxns*nWrmup*sizeof(double), cudaMemcpyHostToDevice));
 	//d_umat is column-major format
-	int blockSize=128, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
+	int blockSize=64, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
 	gpuErrchk(cudaMalloc(&d_umat, nRxns*blockSize*sizeof(double)));//put the correct number of threads
 	gpuErrchk(cudaMalloc(&points, nRxns*pointsPerFile*sizeof(double)));
 
