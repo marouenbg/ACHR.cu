@@ -202,7 +202,7 @@ __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_p
 }
 
 __global__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount, int index){
-	int newindex = blockIdx.x * blockDim.x +threadIdx.x;
+	int newindex = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
 	for(int i=newindex;i<nRxns-istart;i+=stride){
@@ -215,7 +215,7 @@ __global__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_uma
 
 __global__ void reprojectPoint2(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount,int index){
 	int newindex= blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = blockDim.x * gridDim.x;
+	int stride= blockDim.x * gridDim.x;
 
 	for(int i=newindex;i<nRxns;i+=stride){
 		points[pointCount+pointsPerFile*i]=0;
@@ -229,9 +229,9 @@ __device__ void findMaxAbs(int nRxns, double *d_result, int nMets, double *dev_m
 
 	int k;
 
-	for(k=0;k<nMets;k++){
-		d_result[k]=0;
-	}
+	//for(k=0;k<nMets;k++){
+	//	d_result[k]=0;
+	//}
 	for(k=0;k<nnz;k++){
 		d_result[d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
 	}
@@ -323,10 +323,18 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		advNextStep(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
 		
 		if(totalStepCount % 10 == 0){
+			for(int k=0;k<nMets;k++){
+                		d_distUb[k]=0;//distub is d_result
+        		}
 			findMaxAbs(nRxns, d_distUb, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount);
 			if(*dev_max > 1e-9){
-				reprojectPoint<<<1,4>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
-				reprojectPoint2<<<1,4>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
+				int blockSize=16;
+				int numBlocks=(nRxns-istart + blockSize - 1)/blockSize;
+				int numBlocks2=(nRxns + blockSize - 1)/blockSize;
+				reprojectPoint<<<numBlocks,blockSize>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+				cudaDeviceSynchronize();
+				reprojectPoint2<<<numBlocks2,blockSize>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
+				cudaDeviceSynchronize();
 			}
 		}
 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
@@ -349,7 +357,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
 		double d_prevPoint[1100];
-		double d_centerPointTmp[1100], d_randVector[1100];
+		double d_centerPointTmp[1100], d_randVector[1000];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
@@ -634,7 +642,7 @@ int main(int argc, char **argv){
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
 	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
 	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
-	//computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
+	///computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	//istart=0;
 	//computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
 	//computeKernelQRSeq(nRxns, nMets, h_Slin, h_N);
@@ -650,7 +658,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_fluxMat, nRxns*nWrmup*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_fluxMat,h_fluxMat,nRxns*nWrmup*sizeof(double), cudaMemcpyHostToDevice));
 	//d_umat is column-major format
-	int blockSize=32, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
+	int blockSize=64, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
 	gpuErrchk(cudaMalloc(&d_umat, nRxns*pointsPerFile*sizeof(double)));
 	//could be heavily optimized use one dumat per block, use threadID, put the correct number of threads
 	gpuErrchk(cudaMalloc(&points, nRxns*pointsPerFile*sizeof(double)));
