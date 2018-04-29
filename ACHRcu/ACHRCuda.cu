@@ -225,18 +225,19 @@ __global__ void reprojectPoint2(double *d_N, int nRxns, int istart, double *d_um
 	}
 }
 
-__device__ void findMaxAbs(int nRxns, double *d_result, int nMets, double *dev_max, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *points, int pointsPerFile, int pointCount){
-
+__device__ void findMaxAbs(int nRxns, double *d_umat, int nMets, double *dev_max,int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *points, int pointsPerFile, int pointCount, int index){
+	//int newindex = blockIdx.x * blockDim.x + threadIdx.x;
+	//int stride = blockDim.x * gridDim.x;
 	int k;
 
-	//for(k=0;k<nMets;k++){
-	//	d_result[k]=0;
-	//}
-	for(k=0;k<nnz;k++){
-		d_result[d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
+	for(k=0;k<nMets;k++){
+		d_umat[nMets*index+k]=0;
+	}
+	for(int k=0;k<nnz;k++){
+		d_umat[nMets*index+d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
 	}
 
-	double *dev_max_ptr = thrust::max_element(thrust::seq,d_result, d_result + nMets);
+	double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat + (nMets * index), d_umat + (nMets * (index + 1) ) );
 	dev_max[0] = *dev_max_ptr;
 	
 }
@@ -300,13 +301,13 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_distUb[1100];
 	double d_distLb[1100];
 	//double d_curPoint[10000];
-	//double d_result[1100];//becomes d_distUb
+	//double d_result[1100];//becomes d_umat
 	//double d_tmp[1100];
 	double d_maxStepVec[2200];
 	double d_minStepVec[2200];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
-	double d_stepDist, dev_max[1], alpha, beta;
+	double d_stepDist, alpha, beta, dev_max[1];
 
 	while(stepCount < stepsPerPoint){
 		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
@@ -314,8 +315,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		//randPointId = 9;
 		fillrandPoint(d_fluxMat, randPointId, nRxns, nWrmup, d_centerPointTmp, d_umat, d_distUb, d_distLb, d_ub, d_lb, d_prevPoint, d_pos, dTol, uTol, d_pos_max, d_pos_min, d_maxStepVec, d_minStepVec, d_min_ptr, d_max_ptr, index);
 		d_stepDist=(d_randVector[stepCount])*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
-		//d_stepDist=(0.5)*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];
-		//printf("min is %f max is %f step is %f \n",d_min_ptr[0],d_max_ptr[0],d_stepDist);
+		//d_stepDist=(0.5)*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];		//printf("min is %f max is %f step is %f \n",d_min_ptr[0],d_max_ptr[0],d_stepDist);
 		if ( ((abs(*d_min_ptr) < maxMinTol) && (abs(*d_max_ptr) < maxMinTol)) || (*d_min_ptr > *d_max_ptr) ){ 
 			//nMisses++;
 			continue;
@@ -323,14 +323,21 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		advNextStep(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
 		
 		if(totalStepCount % 10 == 0){
-			for(int k=0;k<nMets;k++){
-                		d_distUb[k]=0;//distub is d_result
-        		}
-			findMaxAbs(nRxns, d_distUb, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount);
+			/*for(int k=0;k<nMets;k++){
+                		d_umat[index*nMets+k]=0;//d_umat is d_result
+        		}*/
+			//int blockSize=128;
+			//int numBlocks=(nnz + blockSize - 1)/blockSize;
+			cudaDeviceSynchronize();
+			findMaxAbs(nRxns, d_umat, nMets, dev_max, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
+			cudaDeviceSynchronize();
+		        //double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat + (nMets*index), d_umat + (nMets*(index+1)));
+		        //dev_max[0] = *dev_max_ptr;
 			if(*dev_max > 1e-9){
 				int blockSize=16;
 				int numBlocks=(nRxns-istart + blockSize - 1)/blockSize;
 				int numBlocks2=(nRxns + blockSize - 1)/blockSize;
+				cudaDeviceSynchronize();
 				reprojectPoint<<<numBlocks,blockSize>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
 				cudaDeviceSynchronize();
 				reprojectPoint2<<<numBlocks2,blockSize>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
