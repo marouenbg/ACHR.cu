@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2017.8.1)  9 NOV 2017 18:10
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2017.8.1)  30 APR 2018 15:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -498,7 +498,7 @@ LaTeX Font Info:    Try loading font information for OT1+pcr on input line 70.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Overfull \hbox (167.96991pt too wide) in paragraph at lines 108--123
+Overfull \hbox (204.96977pt too wide) in paragraph at lines 108--123
 [][] 
  []
 
@@ -542,7 +542,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 138.
 Here is how much of TeX's memory you used:
  7914 strings out of 493013
  120778 string characters out of 6135683
- 213637 words of memory out of 5000000
+ 214637 words of memory out of 5000000
  11333 multiletter control sequences out of 15000+600000
  44502 words of font info for 105 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -554,7 +554,7 @@ ts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/u
 tmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
-Output written on ACHRcu.pdf (1 page, 66893 bytes).
+Output written on ACHRcu.pdf (1 page, 66957 bytes).
 PDF statistics:
  57 PDF objects out of 1000 (max. 8388607)
  46 compressed objects within 1 object stream
