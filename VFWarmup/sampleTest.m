@@ -1,5 +1,5 @@
 %cd('P:\Projects\cudaSampler')
-modelName ='ematrix';
+modelName ='recon2';
 switch modelName
     case 'ecoli_core'
         load Ecoli_core_model;
@@ -14,6 +14,10 @@ switch modelName
     case 'putida'   
         load('Pputida_model_glc_min.mat')
         warmupPts = csvread('P_Putida.mpswarmup.csv');
+    case 'recon2'
+        load('Recon205_20150515Consistent.mat')
+        warmupPts = csvread('Recon2.mpswarmup.csv');
+        model=modelConsistent;
 end
 %addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio1262'));
 %changeCobraSolver('tomlab_cplex')

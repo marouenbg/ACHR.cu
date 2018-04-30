@@ -55,7 +55,7 @@ fidErr = fopen('ACHRerror.txt','w');
 
 totalStepCount = 0;
 
-showprogress(0,'ACHR sampling in progress ...');
+%showprogress(0,'ACHR sampling in progress ...');
 totalCount = nFiles*pointsPerFile*stepsPerPoint;
 
 t0 = cputime;
@@ -91,15 +91,11 @@ for i = 1:nFiles
 
             % Figure out if we are too close to a boundar
             validDir = ((distUb > dTol) & (distLb > dTol));
-            length(find(validDir));
-            [u validDir];
             %model.rxns(~validDir)
 
             % Zero out the directions that would bring us too close to the
             % boundary. This may cause problems.
             %u(~validDir) = 0;
-            
-            u(validDir);
   
             % Figure out positive and negative directions
             posDirn = find(u(validDir) > uTol);
@@ -176,8 +172,6 @@ for i = 1:nFiles
 
             %recalculate the center point
             centerPoint = ((nWrmup+totalStepCount)*centerPoint + curPoint)/(nWrmup+totalStepCount+1);
-            ((nWrmup+totalStepCount))/(nWrmup+totalStepCount+1);
-            1/(nWrmup+totalStepCount+1);
             
             % Exit if time exceeded
             if (timeElapsed > maxTime)
