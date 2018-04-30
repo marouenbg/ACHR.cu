@@ -187,7 +187,7 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	gsl_matrix_free(V);
 }
 
-__device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount){
+__device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount, int index){
 
 	for(int i=0;i<nRxns ;i++){
 		if(points[pointCount+pointsPerFile*i]>d_ub[i]){
@@ -195,8 +195,8 @@ __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_p
 		}else if(points[pointCount+pointsPerFile*i]<d_lb[i]){
 			points[pointCount+pointsPerFile*i]=d_lb[i];
 		}
-		d_prevPoint[i]=points[pointCount+pointsPerFile*i];
-		d_centerPoint[i]=alpha*d_centerPoint[i]+beta*points[pointCount+pointsPerFile*i];
+		d_prevPoint[nRxns*index+i]=points[pointCount+pointsPerFile*i];
+		d_centerPoint[nRxns*index+i]=alpha*d_centerPoint[nRxns*index+i]+beta*points[pointCount+pointsPerFile*i];
 	}
 }
 
@@ -243,7 +243,7 @@ __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec,
 
 __device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
 	for(int i=0;i<nRxns;i++){
-		points[pointCount+pointsPerFile*i]=d_prevPoint[i]+d_stepDist*d_umat[nRxns*index+i];
+		points[pointCount+pointsPerFile*i]=d_prevPoint[nRxns*index+i]+d_stepDist*d_umat[nRxns*index+i];
 	}
 }
 
@@ -257,15 +257,15 @@ __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int 
     	thrust::plus<double> binary_op;
 
 	for(int i=0;i<nRxns;i++){
-		d_umat[nRxns*index+i]=d_fluxMat[i+randpointID*nRxns]-d_centerPoint[i];//fluxMAt call is d_randPoint
+		d_umat[nRxns*index+i]=d_fluxMat[i+randpointID*nRxns]-d_centerPoint[nRxns*index+i];//fluxMAt call is d_randPoint
 	}
 
 	d_norm=std::sqrt( thrust::transform_reduce(thrust::seq,d_umat+(nRxns*index), d_umat+(nRxns*(index+1)), unary_op, init, binary_op) );
 
 	for(int i=0;i<nRxns;i++){
 		d_umat[nRxns*index+i]=d_umat[nRxns*index+i]/d_norm;
-		d_distUb[nRxns*index+i]=d_ub[i]-d_prevPoint[i];
-		d_distLb[nRxns*index+i]=d_prevPoint[i]-d_lb[i];
+		d_distUb[nRxns*index+i]=d_ub[i]-d_prevPoint[nRxns*index+i];
+		d_distLb[nRxns*index+i]=d_prevPoint[nRxns*index+i]-d_lb[i];
 		if(d_distUb[nRxns*index+i]>dTol && d_distLb[nRxns*index+i]>dTol){
 			if(d_umat[nRxns*index+i] > uTol){
 				d_minStepVec[2*nRxns*index+k]=-d_distLb[nRxns*index+i]/d_umat[nRxns*index+i];
@@ -345,7 +345,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
 		
-		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount);
+		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
 		
 		stepCount++;
 		totalStepCount++;
@@ -355,14 +355,15 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	
 }
 
-__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec){
+__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp){
 	int index = blockIdx.x * blockDim.x +threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		double d_prevPoint[2200];
-		double d_centerPointTmp[2200], d_randVector[1000];
+		//double d_prevPoint[1000];
+		//double d_centerPointTmp[1000], 
+		double d_randVector[1000];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
@@ -371,8 +372,8 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 		totalStepCount=0;
 
 		for(int i=0;i<nRxns;i++){
-			d_centerPointTmp[i]=d_centerPoint[i];
-			d_prevPoint[i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
+			d_centerPointTmp[nRxns*index+i]=d_centerPoint[i];
+			d_prevPoint[nRxns*index+i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
 		}
 
 		for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
@@ -508,7 +509,7 @@ int main(int argc, char **argv){
 	double *h_ub, *h_lb, *d_ub, *d_lb;
 	double uTol = 1e-9, *points, *h_points, *d_umat, *d_umat2;
 	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat, *d_distUb, *d_distLb;
-	double *d_val, *h_val, *d_minStepVec, *d_maxStepVec;
+	double *d_val, *h_val, *d_minStepVec, *d_maxStepVec, *d_prevPoint, *d_centerPointTmp;
 	//double *d_Slin_row;
 	double dTol = 1e-14;
 	double elapsedTime;
@@ -670,6 +671,8 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_distLb, nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_minStepVec, 2*nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_maxStepVec, 2*nRxns*pointsPerFile*sizeof(double)));
+	gpuErrchk(cudaMalloc(&d_prevPoint, nRxns*pointsPerFile*sizeof(double)));
+	gpuErrchk(cudaMalloc(&d_centerPointTmp, nRxns*pointsPerFile*sizeof(double)));
 	//could be heavily optimized use one dumat per block, use threadID, put the correct number of threads
 	gpuErrchk(cudaMalloc(&points, nRxns*pointsPerFile*sizeof(double)));
 
@@ -687,7 +690,7 @@ int main(int argc, char **argv){
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
 		cudaDeviceSynchronize();
-		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
+		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
