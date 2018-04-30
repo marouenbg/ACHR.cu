@@ -360,7 +360,6 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 	int stride = blockDim.x * gridDim.x;
 	int index2 = threadIdx.x;
 
-	//__shared__ double d_centerPointTmp[10000];
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
 		//double d_prevPoint[1000];
