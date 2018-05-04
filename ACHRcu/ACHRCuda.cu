@@ -297,13 +297,13 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	
 	int randPointId;
 	//double d_u[100];
-	//double d_distUb[1100];
-	//double d_distLb[1100];
+	//double d_distUb[100000];
+	//double d_distLb[100000];
 	//double d_curPoint[10000];
 	//double d_result[1100];//becomes d_umat
 	//double d_tmp[1100];
-	//double d_maxStepVec[2200];
-	//double d_minStepVec[2200];
+	//double d_maxStepVec[100000];
+	//double d_minStepVec[100000];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, alpha, beta, dev_max[1];
@@ -361,7 +361,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		//double d_prevPoint[1000];
+		//double d_prevPoint1[1000];
 		//double d_centerPointTmp[1000], 
 		double d_randVector[1000];
 
