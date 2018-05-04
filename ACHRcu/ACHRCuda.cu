@@ -307,8 +307,8 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, alpha, beta, dev_max[1];
-	int blockSize=64, blockSize1=32, blockSize2=32;
-	int numBlocks=(nRxns+blockSize-1)/blockSize;
+	int blockSize=64, blockSize1=16, blockSize2=16;// 64 32 32
+	int numBlocks=(nnz + blockSize-1)/blockSize;
 	int numBlocks1=(nRxns-istart + blockSize1 - 1)/blockSize1;
 	int numBlocks2=(nRxns + blockSize2 - 1)/blockSize2;
 
@@ -342,7 +342,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 				cudaDeviceSynchronize();
 			}
 		}
-		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
+ 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
 		
 		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
