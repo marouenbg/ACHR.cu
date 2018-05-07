@@ -105,19 +105,19 @@ GPGPU-enabled parallel sampling of large scale metabolic models
 \section{Material and methods}
 
 \section{Results}
-\begin{tabular}{|l|c|r|c|c|c|c|}
+\begin{tabular}{|l|c|r|c|c|c|c|c|}
   \hline
-  Model & Points & Steps & Intel Xeon (3.5 Ghz) & Quadro K600 (0.87 Ghz) & Tesla M2090 & K40m \\
+  Model & Points & Steps & Intel Xeon (3.5 Ghz) & Quadro K600 (0.87 Ghz) & Tesla M2090 & K40m & K80\\
   \hline
-   Ecoli core& 1000& 1000& 42 & 1.9 & 1.2&\\
-   Ecoli core& 5000& 1000& 208 & 8.3 & 1.88&\\
-   Ecoli core& 10000& 1000& 420 & 17.8 & 3.33&\\
-   P Putida  & 1000& 1000& 103 & 54 & 32&\\
-   P Putida  & 5000& 1000& 516 &  223 & 59&\\
-   P Putida  & 10000& 1000& 1081 & 440 & 111&\\
-   Recon2  & 1000& 1000&  & & &2307\\
-   Recon2  & 5000& 1000&  & & &\\
-   Recon2  & 10000& 1000&  & & &\\
+   Ecoli core& 1000& 1000& 42 & 1.9 & 1.2& &\\
+   Ecoli core& 5000& 1000& 208 & 8.3 & 1.88& &\\
+   Ecoli core& 10000& 1000& 420 & 17.8 & 3.33& &\\
+   P Putida  & 1000& 1000& 103 & 54 & 32& &\\
+   P Putida  & 5000& 1000& 516 &  223 & 59& &\\
+   P Putida  & 10000& 1000& 1081 & 440 & 111& &\\
+   Recon2  & 1000& 1000& 2309 & & & &\\
+   Recon2  & 5000& 1000&  & & & &\\
+   Recon2  & 10000& 1000&  & & & &\\
   \hline
 \end{tabular}
 \section*{ACKNOWLEDGMENT}
