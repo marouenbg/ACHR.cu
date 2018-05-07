@@ -297,18 +297,18 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	
 	int randPointId;
 	//double d_u[100];
-	//double d_distUb[1100];
-	//double d_distLb[1100];
+	//double d_distUb[100000];
+	//double d_distLb[100000];
 	//double d_curPoint[10000];
 	//double d_result[1100];//becomes d_umat
 	//double d_tmp[1100];
-	//double d_maxStepVec[2200];
-	//double d_minStepVec[2200];
+	//double d_maxStepVec[100000];
+	//double d_minStepVec[100000];
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, alpha, beta, dev_max[1];
-	int blockSize=64, blockSize1=32, blockSize2=32;
-	int numBlocks=(nRxns+blockSize-1)/blockSize;
+	int blockSize=64, blockSize1=16, blockSize2=16;// 64 32 32
+	int numBlocks=(nnz + blockSize-1)/blockSize;
 	int numBlocks1=(nRxns-istart + blockSize1 - 1)/blockSize1;
 	int numBlocks2=(nRxns + blockSize2 - 1)/blockSize2;
 
@@ -342,7 +342,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 				cudaDeviceSynchronize();
 			}
 		}
-		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
+ 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
 		
 		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
@@ -361,7 +361,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		//double d_prevPoint[1000];
+		//double d_prevPoint1[1000];
 		//double d_centerPointTmp[1000], 
 		double d_randVector[1000];
 
@@ -376,10 +376,11 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 			d_prevPoint[nRxns*index+i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
 		}
 
-		for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
+		//for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
+			int pointCount=index;
 			createRandomVec(d_randVector, stepsPerPoint, state);
 			createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
-		}
+		//}
 	}
 }
 
@@ -664,7 +665,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_fluxMat, nRxns*nWrmup*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_fluxMat,h_fluxMat,nRxns*nWrmup*sizeof(double), cudaMemcpyHostToDevice));
 	//d_umat is column-major format
-	int blockSize=64, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
+	int blockSize=8, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
 	gpuErrchk(cudaMalloc(&d_umat, nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_umat2, nMets*pointsPerFile*sizeof(double)));//could be removed and replaced by d_umat
 	gpuErrchk(cudaMalloc(&d_distUb, nRxns*pointsPerFile*sizeof(double)));
