@@ -376,10 +376,11 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 			d_prevPoint[nRxns*index+i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
 		}
 
-		for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
+		//for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
+			int pointCount=index;
 			createRandomVec(d_randVector, stepsPerPoint, state);
 			createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
-		}
+		//}
 	}
 }
 
