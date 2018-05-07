@@ -202,11 +202,11 @@ __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_p
 	}
 }
 
-__global__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount, int index){
-	int newindex = blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = blockDim.x * gridDim.x;
+__device__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount, int index){
+	//int newindex = blockIdx.x * blockDim.x + threadIdx.x;
+	//int stride = blockDim.x * gridDim.x;
 
-	for(int i=newindex;i<nRxns-istart;i+=stride){
+	for(int i=0;i<nRxns-istart;i++){
 		d_umat[nRxns*index+i]=0;//d_umat now is d_tmp
 		for(int j=0;j<nRxns;j++){
 			d_umat[nRxns*index+i]+=d_N[j+i*nRxns]*points[pointCount+pointsPerFile*j];//here t(N)*Pt
@@ -214,11 +214,11 @@ __global__ void reprojectPoint(double *d_N, int nRxns, int istart, double *d_uma
 	}
 }
 
-__global__ void reprojectPoint2(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount,int index){
-	int newindex= blockIdx.x * blockDim.x + threadIdx.x;
-	int stride= blockDim.x * gridDim.x;
+__device__ void reprojectPoint2(double *d_N, int nRxns, int istart, double *d_umat, double *points, int pointsPerFile, int pointCount,int index){
+	//int newindex= blockIdx.x * blockDim.x + threadIdx.x;
+	//int stride= blockDim.x * gridDim.x;
 
-	for(int i=newindex;i<nRxns;i+=stride){
+	for(int i=0;i<nRxns;i++){
 		points[pointCount+pointsPerFile*i]=0;
 		for(int j=0;j<nRxns-istart;j++){
 			points[pointCount+pointsPerFile*i]+=d_N[j*nRxns+i]*d_umat[nRxns*index+j];//here N*tmp
@@ -292,7 +292,9 @@ __device__ void createRandomVec(double *randVector, int stepsPerPoint, curandSta
 }
 
 __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, int nWrmup, int nRxns,curandState_t state, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int pointsPerFile, int nMets, double *d_N, int istart, double *d_centerPoint, int totalStepCount, int pointCount, double *d_randVector, double *d_prevPoint, double *d_centerPointTmp, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, int index, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec){
-	
+        //stepCount = blockIdx.x * blockDim.x + threadIdx.x;
+        //int stride = blockDim.x * gridDim.x;	
+
 	int randPointId;
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
@@ -302,7 +304,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	int numBlocks1=(nRxns-istart + blockSize1 - 1)/blockSize1;
 	int numBlocks2=(nRxns + blockSize2 - 1)/blockSize2;
 
-	while(stepCount < stepsPerPoint){
+	//while(stepCount < stepsPerPoint){
 		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
 		//printf("randPoint id is %d \n",randPointId);
 		//randPointId = 9;
@@ -311,7 +313,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		//d_stepDist=(0.5)*(d_max_ptr[0]-d_min_ptr[0])+d_min_ptr[0];		//printf("min is %f max is %f step is %f \n",d_min_ptr[0],d_max_ptr[0],d_stepDist);
 		if ( ((abs(*d_min_ptr) < maxMinTol) && (abs(*d_max_ptr) < maxMinTol)) || (*d_min_ptr > *d_max_ptr) ){ 
 			//nMisses++;
-			continue;
+			return;
 		}
 
 		//cudaDeviceSynchronize();
@@ -328,11 +330,11 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		        double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2 + (nMets*index), d_umat2 + (nMets*(index+1)));
 		        dev_max[0] = *dev_max_ptr;
 			if(*dev_max > 1e-9){
-				cudaDeviceSynchronize();
-				reprojectPoint<<<numBlocks1,blockSize1>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
-				cudaDeviceSynchronize();
-				reprojectPoint2<<<numBlocks2,blockSize2>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
-				cudaDeviceSynchronize();
+				//cudaDeviceSynchronize();
+				reprojectPoint(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+				//cudaDeviceSynchronize();
+				reprojectPoint2(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
+				//cudaDeviceSynchronize();
 			}
 		}
  		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
@@ -343,31 +345,30 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		//cudaDeviceSynchronize();
 		stepCount++;
 		totalStepCount++;
-	}
+	//}
 	//printf("cur point 0 is %f \n", d_curPoint[0]);
 	//addPoint(pointCount, points, d_curPoint, pointsPerFile, nRxns);
 	
 }
 
-__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp){
+__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp, double *d_randVector){
 	int index = blockIdx.x * blockDim.x +threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
 
-	for(int i=index; i < pointsPerFile; i+=stride){
+	for(int i=index; i < pointsPerFile*stepsPerPoint; i+=stride){
 		int stepCount, totalStepCount;
-		//double d_prevPoint1[1000];
-		//double d_centerPointTmp[1000], 
-		double d_randVector[1000];
+		//double d_randVector[1000];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
 
 		stepCount=0;
 		totalStepCount=0;
+		index=index/1000;
 
-		for(int i=0;i<nRxns;i++){
-			d_centerPointTmp[nRxns*index+i]=d_centerPoint[i];
-			d_prevPoint[nRxns*index+i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
+		for(int j=0;j<nRxns;j++){
+			d_centerPointTmp[nRxns*index+j]=d_centerPoint[j];
+			d_prevPoint[nRxns*index+j]=d_centerPoint[j];//needs to be fixed wtr to prevpoint
 		}
 
 		//for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
@@ -503,7 +504,7 @@ int main(int argc, char **argv){
 	double *cmatval;
 	double *h_ub, *h_lb, *d_ub, *d_lb;
 	double uTol = 1e-9, *points, *h_points, *d_umat, *d_umat2;
-	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat, *d_distUb, *d_distLb;
+	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat, *d_distUb, *d_distLb, *d_randVector;
 	double *d_val, *h_val, *d_minStepVec, *d_maxStepVec, *d_prevPoint, *d_centerPointTmp;
 	//double *d_Slin_row;
 	double dTol = 1e-14;
@@ -661,7 +662,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_fluxMat, nRxns*nWrmup*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_fluxMat,h_fluxMat,nRxns*nWrmup*sizeof(double), cudaMemcpyHostToDevice));
 	//d_umat is column-major format
-	int blockSize=8, numBlocks=(pointsPerFile + blockSize - 1)/blockSize;
+	int blockSize=512, numBlocks=(pointsPerFile*stepsPerPoint + blockSize - 1)/blockSize;
 	gpuErrchk(cudaMalloc(&d_umat, nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_umat2, nMets*pointsPerFile*sizeof(double)));//could be removed and replaced by d_umat
 	gpuErrchk(cudaMalloc(&d_distUb, nRxns*pointsPerFile*sizeof(double)));
@@ -670,6 +671,7 @@ int main(int argc, char **argv){
 	gpuErrchk(cudaMalloc(&d_maxStepVec, 2*nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_prevPoint, nRxns*pointsPerFile*sizeof(double)));
 	gpuErrchk(cudaMalloc(&d_centerPointTmp, nRxns*pointsPerFile*sizeof(double)));
+	gpuErrchk(cudaMalloc(&d_randVector, 1000*sizeof(double)));
 	//could be heavily optimized use one dumat per block, use threadID, put the correct number of threads
 	gpuErrchk(cudaMalloc(&points, nRxns*pointsPerFile*sizeof(double)));
 
@@ -687,7 +689,7 @@ int main(int argc, char **argv){
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
 		//cudaDeviceSynchronize();
-		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp);
+		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp,d_randVector);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
