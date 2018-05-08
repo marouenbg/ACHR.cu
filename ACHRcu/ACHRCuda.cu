@@ -184,8 +184,6 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 }
 
 __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount, int index){
-        //int newindex = blockIdx.x * blockDim.x + threadIdx.x;
-        //int stride = blockDim.x * gridDim.x;
 
 	for(int i=0;i<nRxns ;i++){
 		if(points[pointCount+pointsPerFile*i]>d_ub[i]){
@@ -233,8 +231,6 @@ __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec,
 }
 
 __device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
-	//int newindex = blockIdx.x * blockDim.x + threadIdx.x;
-        //int stride = blockDim.x * gridDim.x;
 
 	for(int i=0;i<nRxns;i++){
 		points[pointCount+pointsPerFile*i]=d_prevPoint[nRxns*index+i]+d_stepDist*d_umat[nRxns*index+i];
@@ -355,13 +351,12 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 	int stride = blockDim.x * gridDim.x;
 	int stepCount, totalStepCount, pointCount;
 
-	//__syncthreads();
 	for(int i=index; i < pointsPerFile*stepsPerPoint; i+=stride){
 
 		//atomicAdd(totalStepCount,1);
 		totalStepCount=index;
-		stepCount =totalStepCount % stepsPerPoint;
-		pointCount=totalStepCount/stepsPerPoint;
+		stepCount =totalStepCount / stepsPerPoint;//Changed modulo by div
+		pointCount=totalStepCount % stepsPerPoint;
 		//stepCount=index % stepsPerPoint;
 		//totalStepCount=index;
 		//cudaDeviceSynchronize();
@@ -371,11 +366,6 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
-
-		/*for(int j=0;j<nRxns;j++){
-			d_centerPointTmp[nRxns*index+j]=d_centerPoint[j];
-			d_prevPoint[nRxns*index+j]=d_centerPoint[j];//needs to be fixed wtr to prevpoint
-		}*/
 
 		createRandomVec(d_randVector, stepsPerPoint, state);
 		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
@@ -508,7 +498,7 @@ __global__ void fillCenterPrev(int nRxns, int pointsPerFile, double *d_centerPoi
         for(int j=index;j<nRxns;j+=stride){
         	for(int ind=0;ind<pointsPerFile;ind++){
                 	d_centerPointTmp[nRxns*ind+j]=d_centerPoint[j];
-                        d_prevPoint[nRxns*ind+j]=d_centerPoint[j];
+                        d_prevPoint[nRxns*ind+j]=d_centerPoint[j];//needs to be fixed wtr to prevPoint
                 }       
         }       
 }
