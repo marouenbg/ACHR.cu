@@ -277,8 +277,11 @@ __device__ void fillrandPoint(double *d_fluxMat,int randpointID, int nRxns, int 
 	d_max_ptr[0] = *d_max_ptr_dev;
 }
 
-__device__ void createRandomVec(double *randVector, int stepsPerPoint, curandState_t state){
-	for(int i=0;i<stepsPerPoint;i++){
+__global__ void createRandomVec(double *randVector, int stepsPerPoint, curandState_t state){
+        int newindex = blockIdx.x * blockDim.x + threadIdx.x;
+        int stride = blockDim.x * gridDim.x;
+
+	for(int i=newindex;i<stepsPerPoint;i+=stride){
 		randVector[i]=(double)curand_uniform(&state);
 	}
 }
@@ -479,6 +482,7 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 __global__ void fillCenterPrev(int nRxns, int pointsPerFile, double *d_centerPoint, double *d_prevPoint, double *d_centerPointTmp, double *d_randVector, int stepsPerPoint){
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
         int stride = blockDim.x * gridDim.x;
+        int blockSize=256, numBlocks=(pointsPerFile*stepsPerPoint + blockSize - 1)/blockSize;
 
         for(int j=index;j<nRxns;j+=stride){
         	for(int ind=0;ind<pointsPerFile;ind++){
@@ -490,7 +494,7 @@ __global__ void fillCenterPrev(int nRxns, int pointsPerFile, double *d_centerPoi
         curandState_t state;
         curand_init(clock64(),threadIdx.x,0,&state);
 
-        createRandomVec(d_randVector, stepsPerPoint*pointsPerFile, state);//has to be fixed for eve
+        createRandomVec<<<numBlocks,blockSize>>>(d_randVector, stepsPerPoint*pointsPerFile, state);//has to be fixed for eve
 }
 
 
