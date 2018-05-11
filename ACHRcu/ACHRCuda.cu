@@ -227,22 +227,18 @@ __global__ void reprojectPoint2(double *d_N, int nRxns, int istart, double *d_um
 __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *points, int pointsPerFile, int pointCount, int index){
 	int newindex = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
-	//int k;
-
-	/*for(k=0;k<nMets;k++){
-		d_umat2[nMets*index+k]=0;
-	}*/
+	
 	for(int k=newindex;k<nnz;k+=stride){
 		d_umat2[nMets*index+d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
 	}
-
-	/*double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2+(nMets*index), d_umat2+(nMets*(index+1)));
-	dev_max[0] = *dev_max_ptr;*/
 	
 }
 
-__device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
-	for(int i=0;i<nRxns;i++){
+__global__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
+	int newindex= blockIdx.x * blockDim.x + threadIdx.x;
+	int stride= blockDim.x * gridDim.x;
+
+	for(int i=newindex;i<nRxns;i+=stride){
 		points[pointCount+pointsPerFile*i]=d_prevPoint[nRxns*index+i]+d_stepDist*d_umat[nRxns*index+i];
 	}
 }
@@ -323,15 +319,18 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 			//nMisses++;
 			continue;
 		}
-		advNextStep(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
-		
+
+		//cudaDeviceSynchronize();
+		advNextStep<<<numBlocks2,blockSize2>>>(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
+		//cudaDeviceSynchronize();
+
 		if(totalStepCount % 10 == 0){
 			for(int k=0;k<nMets;k++){
                 		d_umat2[index*nMets+k]=0;//d_umat is d_result
         		}
 			//cudaDeviceSynchronize();
 			findMaxAbs<<<numBlocks,blockSize>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
-			cudaDeviceSynchronize();
+			//cudaDeviceSynchronize();
 		        double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2 + (nMets*index), d_umat2 + (nMets*(index+1)));
 		        dev_max[0] = *dev_max_ptr;
 			if(*dev_max > 1e-9){
@@ -358,6 +357,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, double *d_centerPoint, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp){
 	int index = blockIdx.x * blockDim.x +threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
+	int pointCount;
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
@@ -376,11 +376,9 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 			d_prevPoint[nRxns*index+i]=d_centerPoint[i];//needs to be fixed wtr to prevpoint
 		}
 
-		//for(int pointCount=index;pointCount<pointsPerFile;pointCount+=stride){
-			int pointCount=index;
-			createRandomVec(d_randVector, stepsPerPoint, state);
-			createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
-		//}
+		pointCount=index;
+		createRandomVec(d_randVector, stepsPerPoint, state);
+		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
 	}
 }
 
