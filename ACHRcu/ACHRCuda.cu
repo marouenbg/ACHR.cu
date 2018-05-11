@@ -327,9 +327,9 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		//cudaDeviceSynchronize();
 
 		if(totalStepCount % 10 == 0){
-			for(int k=0;k<nMets;k++){
-                		d_umat2[index*nMets+k]=0;//d_umat is d_result
-        		}
+			//for(int k=0;k<nMets;k++){
+                	//	d_umat2[index*nMets+k]=0;//d_umat is d_result
+        		//}
 			//cudaDeviceSynchronize();
 			findMaxAbs<<<1,nnz>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
 			//cudaDeviceSynchronize();
@@ -650,10 +650,10 @@ int main(int argc, char **argv){
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
 	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
-	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
+	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
 	///computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	//istart=0;
-	//computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
+	computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
 	//computeKernelQRSeq(nRxns, nMets, h_Slin, h_N);
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
