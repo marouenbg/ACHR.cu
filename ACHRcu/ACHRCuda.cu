@@ -339,24 +339,25 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
 }
 
-__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp, double *d_randVector){
+__global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPerPoint, int nRxns, int nWrmup, double *d_fluxMat, double *d_ub, double *d_lb, double dTol, double uTol, double maxMinTol, int nMets, double *d_N, int istart, int *d_rowVec, int *d_colVec, double *d_val, int nnz, double *d_umat, double *d_umat2, double *d_distUb, double *d_distLb, double *d_maxStepVec, double *d_minStepVec, double *d_prevPoint, double *d_centerPointTmp, double *d_randVector, int *totalStepCount){
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	int stride = blockDim.x * gridDim.x;
-	int stepCount, totalStepCount, pointCount;
+	int stepCount, pointCount, totalStepCount_thread;
 
 	for(int i=index; i < pointsPerFile*stepsPerPoint; i+=stride){
 
-		totalStepCount=index;
-		stepCount =totalStepCount % stepsPerPoint;//Changed modulo by div
-		pointCount=totalStepCount / stepsPerPoint;
+		//totalStepCount=index;
+		totalStepCount_thread=atomicAdd(totalStepCount,1);
+		stepCount =totalStepCount_thread % stepsPerPoint;//Changed modulo by div
+		pointCount=totalStepCount_thread / stepsPerPoint;
 		index= pointCount;//Always equal to point Count
 		
-		//printf("totalStepCount is %d stepCount %d pointCount %d index %d \n",totalStepCount,stepCount,pointCount,index);
+		//printf("totalStepCount is %d stepCount %d pointCount %d index %d \n",totalStepCount_thread,stepCount,pointCount,index);
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
 
 		/*createRandomVec(d_randVector, stepsPerPoint, state);*///has to be fixed for every step
-		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
+		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,totalStepCount_thread,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
 	}
 }
 
@@ -497,6 +498,17 @@ __global__ void fillCenterPrev(int nRxns, int pointsPerFile, double *d_centerPoi
         createRandomVec<<<numBlocks,blockSize>>>(d_randVector, stepsPerPoint*pointsPerFile, state);//has to be fixed for eve
 }
 
+__global__ void printatomicAdd(int *totalStepCount, int pointsPerFile, int stepsPerPoint){
+	int index= blockIdx.x * blockDim.x + threadIdx.x;
+	int stride = blockDim.x * gridDim.x;
+	int previous;
+
+	if(index < pointsPerFile*stepsPerPoint){
+		previous=atomicAdd(totalStepCount,1);
+		printf("total step count is %d \n",previous);
+	}
+
+}
 
 int main(int argc, char **argv){
 	double maxMinTol = 1e-9;
@@ -680,9 +692,12 @@ int main(int argc, char **argv){
 	fillCenterPrev<<<numBlocks2,blockSize2>>>(nRxns, pointsPerFile,d_centerPoint,d_prevPoint,d_centerPointTmp,d_randVector,stepsPerPoint);
 
 	//declare totalStepCount
-	/*int *totalStepCount;
+	int *totalStepCount, *h_totalStepCount;
+	h_totalStepCount=(int*)calloc(1, sizeof(int));
 	gpuErrchk(cudaMalloc(&totalStepCount, sizeof(int)));
-	cudaMemset(totalStepCount, 0 , sizeof(int));*/
+	//cudaMemset(totalStepCount, 0 , sizeof(int));
+        gpuErrchk(cudaMemcpy(totalStepCount,h_totalStepCount,sizeof(int),cudaMemcpyHostToDevice));
+	//printatomicAdd<<<numBlocks,blockSize>>>(totalStepCount, pointsPerFile, stepsPerPoint);
 
         clock_gettime(CLOCK_REALTIME, &now);
         elapsedTime = (double)((now.tv_sec+now.tv_nsec*1e-9) - (double)(tmstart.tv_sec+tmstart.tv_nsec*1e-9));
@@ -698,7 +713,7 @@ int main(int argc, char **argv){
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
 		cudaDeviceSynchronize();
-		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp,d_randVector);
+		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp,d_randVector,totalStepCount);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
