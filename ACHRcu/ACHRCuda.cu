@@ -188,6 +188,8 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 }
 
 __device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount, int index){
+        //int newindex = blockIdx.x * blockDim.x + threadIdx.x;
+        //int stride = blockDim.x * gridDim.x;
 
 	for(int i=0;i<nRxns ;i++){
 		if(points[pointCount+pointsPerFile*i]>d_ub[i]){
@@ -234,11 +236,11 @@ __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec,
 	
 }
 
-__global__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
-	int newindex= blockIdx.x * blockDim.x + threadIdx.x;
-	int stride= blockDim.x * gridDim.x;
+__device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
+	//int newindex= blockIdx.x * blockDim.x + threadIdx.x;
+	//int stride= blockDim.x * gridDim.x;
 
-	for(int i=newindex;i<nRxns;i+=stride){
+	for(int i=0;i<nRxns;i++){
 		points[pointCount+pointsPerFile*i]=d_prevPoint[nRxns*index+i]+d_stepDist*d_umat[nRxns*index+i];
 	}
 }
@@ -303,7 +305,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
 	double d_stepDist, alpha, beta, dev_max[1];
-	int blockSize=64, blockSize1=16, blockSize2=16;// 64 32 32
+	int blockSize=128, blockSize1=16, blockSize2=16;// 64 32 32
 	int numBlocks=(nnz + blockSize-1)/blockSize;
 	int numBlocks1=(nRxns-istart + blockSize1 - 1)/blockSize1;
 	int numBlocks2=(nRxns + blockSize2 - 1)/blockSize2;
@@ -321,7 +323,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		}
 
 		//cudaDeviceSynchronize();
-		advNextStep<<<numBlocks2,blockSize2>>>(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
+		advNextStep(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
 		//cudaDeviceSynchronize();
 
 		if(totalStepCount % 10 == 0){
@@ -329,23 +331,24 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
                 		d_umat2[index*nMets+k]=0;//d_umat is d_result
         		}
 			//cudaDeviceSynchronize();
-			findMaxAbs<<<numBlocks,blockSize>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
+			findMaxAbs<<<1,nnz>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
 			//cudaDeviceSynchronize();
 		        double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2 + (nMets*index), d_umat2 + (nMets*(index+1)));
 		        dev_max[0] = *dev_max_ptr;
 			if(*dev_max > 1e-9){
-				cudaDeviceSynchronize();
-				reprojectPoint<<<numBlocks1,blockSize1>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
-				cudaDeviceSynchronize();
-				reprojectPoint2<<<numBlocks2,blockSize2>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
-				cudaDeviceSynchronize();
+				//cudaDeviceSynchronize();
+				reprojectPoint<<<1,nRxns>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+				//cudaDeviceSynchronize();
+				reprojectPoint2<<<1,nRxns>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
+				//cudaDeviceSynchronize();
 			}
 		}
  		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
-		
+	
+		//cudaDeviceSynchronize();
 		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
-		
+		//cudaDeviceSynchronize();
 		stepCount++;
 		totalStepCount++;
 	}
@@ -378,6 +381,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 		pointCount=index;
 		createRandomVec(d_randVector, stepsPerPoint, state);
+		//cudaDeviceSynchronize();
 		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
 	}
 }
