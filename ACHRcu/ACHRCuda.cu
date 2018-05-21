@@ -187,11 +187,11 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	gsl_matrix_free(V);
 }
 
-__device__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount, int index){
-        //int newindex = blockIdx.x * blockDim.x + threadIdx.x;
-        //int stride = blockDim.x * gridDim.x;
+__global__ void correctBounds(double *d_ub, double *d_lb, int nRxns, double *d_prevPoint, double alpha, double beta, double *d_centerPoint, double *points, int pointsPerFile, int pointCount, int index){
+        int newindex = blockIdx.x * blockDim.x + threadIdx.x;
+        int stride = blockDim.x * gridDim.x;
 
-	for(int i=0;i<nRxns ;i++){
+	for(int i=newindex;i<nRxns ;i+=stride){
 		if(points[pointCount+pointsPerFile*i]>d_ub[i]){
 			points[pointCount+pointsPerFile*i]=d_ub[i];
 		}else if(points[pointCount+pointsPerFile*i]<d_lb[i]){
@@ -236,11 +236,11 @@ __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec,
 	
 }
 
-__device__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
-	//int newindex= blockIdx.x * blockDim.x + threadIdx.x;
-	//int stride= blockDim.x * gridDim.x;
+__global__ void advNextStep(double *d_prevPoint, double *d_umat, double d_stepDist, int nRxns, double *points, int pointsPerFile, int pointCount, int index){
+	int newindex= blockIdx.x * blockDim.x + threadIdx.x;
+	int stride= blockDim.x * gridDim.x;
 
-	for(int i=0;i<nRxns;i++){
+	for(int i=newindex;i<nRxns;i+=stride){
 		points[pointCount+pointsPerFile*i]=d_prevPoint[nRxns*index+i]+d_stepDist*d_umat[nRxns*index+i];
 	}
 }
@@ -315,7 +315,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		}
 
 		//cudaDeviceSynchronize();
-		advNextStep(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
+		advNextStep<<<numBlocks2,blockSize2>>>(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
 		//cudaDeviceSynchronize();
 
 		if(totalStepCount % 10 == 0){
@@ -338,8 +338,8 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
  		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
 		beta=1.0/(nWrmup+totalStepCount+1+1);
 	
-		//cudaDeviceSynchronize();
-		correctBounds(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
+		cudaDeviceSynchronize();
+		correctBounds<<<numBlocks2,blockSize2>>>(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
 		//cudaDeviceSynchronize();
 		stepCount++;
 		totalStepCount++;
