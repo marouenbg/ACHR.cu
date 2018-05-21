@@ -319,20 +319,20 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 		//cudaDeviceSynchronize();
 
 		if(totalStepCount % 10 == 0){
-			//for(int k=0;k<nMets;k++){
-                	//	d_umat2[index*nMets+k]=0;//d_umat is d_result
-        		//}
+			for(int k=0;k<nMets;k++){
+                		d_umat2[index*nMets+k]=0;//d_umat is d_result
+        		}
 			//cudaDeviceSynchronize();
-			findMaxAbs<<<1,nnz>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
+			findMaxAbs<<<numBlocks,blockSize>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
 			//cudaDeviceSynchronize();
 		        double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2 + (nMets*index), d_umat2 + (nMets*(index+1)));
 		        dev_max[0] = *dev_max_ptr;
 			if(*dev_max > 1e-9){
-				//cudaDeviceSynchronize();
-				reprojectPoint<<<1,nRxns>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
-				//cudaDeviceSynchronize();
-				reprojectPoint2<<<1,nRxns>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
-				//cudaDeviceSynchronize();
+				cudaDeviceSynchronize();
+				reprojectPoint<<<numBlocks1,blockSize1>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+				cudaDeviceSynchronize();
+				reprojectPoint2<<<numBlocks2,blockSize2>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
+				cudaDeviceSynchronize();
 			}
 		}
  		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
@@ -642,10 +642,10 @@ int main(int argc, char **argv){
 	//Find the right null space of the S matrix
 	h_N=(double*)malloc(nRxns*nRxns*sizeof(double));//Larger than actual size
 	gpuErrchk(cudaMemcpy(d_Slin,h_Slin,nRxns*nMets*sizeof(double),cudaMemcpyHostToDevice)); //Paralell version
-	//computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
-	///computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
+	computeKernelCuda(h_Slin,nRxns,nMets,&istart,h_N,d_Slin,handle);//Parallel version, based on full SVD, thus require a lot of device memory
+	//computeKernelSeq(h_Slin,nRxns,nMets,h_N,&istart);//Sequential version,  much faster for models < 10k Rxns, host memory
 	//istart=0;
-	computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
+	//computeKernelQRCuda(nRxns, nMets, d_Slin, handle,h_N);
 	//computeKernelQRSeq(nRxns, nMets, h_Slin, h_N);
 	gpuErrchk(cudaMalloc(&d_N, (nRxns-istart)*nRxns*sizeof(double)));
 	gpuErrchk(cudaMemcpy(d_N,h_N,(nRxns-istart)*nRxns*sizeof(double), cudaMemcpyHostToDevice));
@@ -685,7 +685,7 @@ int main(int argc, char **argv){
 		//Initialize points matrix to zero
 		cudaMemset(points, 0 , nRxns*pointsPerFile*sizeof(double));
 		cudaDeviceSynchronize();
-		stepPointProgress<<<numBlocks, blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp);
+		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
 		filename[0]='\0';//Init file name
