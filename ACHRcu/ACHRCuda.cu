@@ -356,8 +356,6 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		//double d_prevPoint1[1000];
-		//double d_centerPointTmp[1000], 
 		double d_randVector[1000];
 
 		curandState_t state;
@@ -373,7 +371,6 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 		pointCount=index;
 		createRandomVec(d_randVector, stepsPerPoint, state);
-		//cudaDeviceSynchronize();
 		createPoint(points, stepCount, stepsPerPoint, nWrmup, nRxns, state, d_fluxMat, d_ub, d_lb, dTol, uTol, maxMinTol, pointsPerFile,nMets,d_N,istart,d_centerPoint,totalStepCount,pointCount,d_randVector,d_prevPoint,d_centerPointTmp ,d_rowVec, d_colVec, d_val, nnz, d_umat,index,d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec);
 	}
 }
