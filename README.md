@@ -18,3 +18,17 @@ Sampling of the solution space of metabolic models is a two-step process:
 | Recon2        | 11346              |     288         |186 |30 |32  |24 |21|
 | E Matrix      | NA                 |   602           |508 |130|52  |43 |43|
 | Ec Matrix     | NA                 | 5275            |4986|924|224 |118|117|
+
+
+
+| Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40 |
+| ------------- |:------------------:| ---------------:|----------------------|----------|
+| Ecoli core    | 1000               | 1000            |42                    |          |
+| Ecoli core    | 5000               | 1000            |208                   |  |
+| Ecoli core    | 10000              | 1000            |420                   |  |
+| P Putida      | 1000               | 1000            |103                   |  |
+| P Putida      | 5000               | 1000            |516                   |  |
+| P Putida      | 10000              | 1000            |1081                  |  |
+| Recon2        | 1000               | 1000            |2309                  |  |
+| Recon2        | 5000               | 1000            |                      |  |
+| Recon2        | 10000              | 1000            |                      |  |
