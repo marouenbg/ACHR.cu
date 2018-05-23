@@ -85,11 +85,18 @@ of points per file, and nSteps is the number of steps per point.
 
 ### Comparison to existing software
 
-OptGP sampler
+The parallel GPU implementation of ACHR.cu is very similar to MATLAB GpSampler. 
+[OptGpSampler](http://cs.ru.nl/~wmegchel/optGpSampler/) provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launches.
+Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of this work that the speedup achieved with the generation of warmup points is greater than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. In OptGpSampler, each worker gets the same amount of points and steps to compute, the problem is statsically loaded by design.
+While if we perform the generation of warmup points separetly from sampling, the problem can be dynamically balanced because the workers can generate uneven number of points. 
 
 ### Future improvements
 
-Potentially an MPI/CUDA hybrid to take advantage of the multi-GPU arhcitecture of recent NVIDIA cards like the K80.
++ Potentially an MPI/CUDA hybrid to take advantage of the multi-GPU arhcitecture of recent NVIDIA cards like the K80.
+
++ Merge the warmup points generation and the sampling processes in one call.
 
 ### Acknowledgments
-The experiments were carried out using the HPC facilities of the University of Luxembourg (hpc.uni.lu)
+
+The experiments were carried out using the [HPC facilities of the University of Luxembourg](http://hpc.uni.lu)
+
