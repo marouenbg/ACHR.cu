@@ -29,8 +29,10 @@ The speed up is impressive (up to 50x in some cases) and shows the power of dyna
 
 2- The actual sampling of the solution space starting from the warmup points.
 
-The sampling in MATLAB was performed using the ACHR serial function. 
-In this case, the speed up is quite important, it is important to note that even for a single core, the CPU is multithreaded especially with MATLAB base functions such as min and max.
+Sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
+The sampling in MATLAB was performed using the ACHR serial function using one sampling chain and the data was saved every 1000 points. The GPU parallel version creates one chain for each point. 
+Each thread in the GPU executes one chain.   
+In this case, the speed up with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base functions such as min and max.
 
 
 | Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40 |
@@ -45,11 +47,12 @@ In this case, the speed up is quite important, it is important to note that even
 | Recon2        | 5000               | 1000            |                      |  |
 | Recon2        | 10000              | 1000            |                      |  |
 
-*SVD and QR refer to the impelementation of the null space computation. The implementation of null space was a major determinant in the final run time and the fastest implementation was reported in the final run times.
+*SVD and QR refer to the impelementation of the null space computation. 
+The implementation of null space was a major determinant in the final run time and the fastest implementation was reported in the final run times.
 While computing the SVD of the S matrix is more precise than QR, it is not prone for parallel computation in the GPU which can be even slower than the CPU in some cases.
 Computing the null space through QR decompostion is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes colmuns below a given precision of the SV.
 
  
 3- Comparison to existing software
-
+OptGP sampler
 
