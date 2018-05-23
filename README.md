@@ -4,7 +4,7 @@ The repo also contains VFwarmup which an implementation of the generation of sam
 
 The sampling of the solution space of metabolic models is a two-step process:
 
-1- Generation of warmup points
+1. Generation of warmup points
 
 The first step of sampling the solution space of metabolic networks involves the generation of warmup points that are solutions of the metabolic model's linear program. The sampling MCMC chain starts from those solutions to explore the solution space. The generation of p warmup points corresponds to flux variability analysis (FVA) solutions for the first p < 2n points, with n the number of reactions in the network, and to randomly generated solutions genrated through a randomc objective vector c for the p > 2n points.
 
@@ -28,11 +28,15 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 
 The speed up is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
 
-2- The actual sampling of the solution space starting from the warmup points.
+1.1. Software and hardware requirements
+
+createWarmupVF require OpenMP and MPI through, OpenMPI implementation,and IBM CPLEX 12.6.3.
+
+2. The actual sampling of the solution space starting from the warmup points.
 
 Sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR serial function using one sampling chain and the data was saved every 1000 points. The GPU parallel version creates one chain for each point. 
-Each thread in the GPU executes one chain.   
+Each thread in the GPU executes one chain. Morevoer, each thread can call additional threads to perform large matrix operations using the nested parallelism abilities of the new NVIDIA cards.   
 In this case, the speed up with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base functions such as min and max.
 
 
@@ -56,7 +60,12 @@ While computing the SVD of the S matrix is more precise than QR, it is not prone
 
 Computing the null space through QR decompostion is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes colmuns below a given precision of the SV.
 
- 
+2.1. Software and Hardware requirements
+
+ACHR.cu requires CUDA 8.0 and works on sm_35 hardware and above. This is particularly due to the use of nested parallelism that is only available in these versions.
+It also requires CPLEX 12.6.3 and GSL library of linear algebra (for the sequential version of SVD and QR).
+
 3- Comparison to existing software
+
 OptGP sampler
 
