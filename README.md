@@ -1,6 +1,8 @@
 This repo contains the code for ACHR.cu the cuda GPU implementation of the sampling algorithm ACHR.
 
-The repo also contains VFwarmup which an implementation of the generation of sampling warmup points using dynamic load balancing.
+The repo also contains VFwarmup which is an implementation of the generation of sampling warmup points using dynamic load balancing.
+
+ACHR is an MCMC sampling algorithm that is widely used in metabolic models. ACHR allows to obtain flux distribution for each reaction under the conditions of optimality.
 
 The sampling of the solution space of metabolic models is a two-step process:
 
@@ -12,7 +14,8 @@ The genration of warmup points is a time-consuming process and requires the use 
 
 To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C allows to assign less points to workers that required more time to solve previous chunks. In the end, the workers converge at the same time.
 Below I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) and through a hybrid MPI/OpenMP impelementation (CreateWarmupVF), both for the generation of 30,000 warmup points. 
-Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. We can divide by the number of cores to get the times (at best) for a parallel version.The experiments are the average of 3 trials in every settings.
+Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. We can divide by the number of cores to get the times (at best) for a parallel version.
+The experiments are the average of 3 trials in every settings in seconds.
 
 | Model         | CreateWarmupMATLAB | CreateWarmupVF  |CreateWarmupVF  |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |
 | ------------- |:------------------:| ---------------:|----|---|---|---|---|
@@ -31,7 +34,7 @@ Also, I noted that would the model can be largely imbalanced due to the generati
 
 1. Software and hardware requirements
 
-createWarmupVF require OpenMP and MPI through, OpenMPI implementation,and IBM CPLEX 12.6.3.
+createWarmupVF requires OpenMP and MPI through OpenMPI implementation, and IBM CPLEX 12.6.3.
 
 2. Quick guide
 
@@ -58,8 +61,6 @@ In this case, the speed up with the GPU is quite important in the table below. I
 | P Putida      | 5000               | 1000            |516                   | 70.84 (SVD) |
 | P Putida      | 10000              | 1000            |1081                  | 138   (SVD) |
 | Recon2        | 1000               | 1000            |2309                  | 269   (QR)  |
-| Recon2        | 5000               | 1000            |                      |  |
-| Recon2        | 10000              | 1000            |                      |  |
 
 *SVD and QR refer to the impelementation of the null space computation.
  
@@ -85,7 +86,7 @@ of points per file, and nSteps is the number of steps per point.
 
 ### Comparison to existing software
 
-The parallel GPU implementation of ACHR.cu is very similar to MATLAB GpSampler. 
+The parallel GPU implementation of ACHR.cu is very similar to the MATLAB Cobra Toolbox [GpSampler](https://github.com/marouenbg/cobratoolbox/blob/master/src/modelAnalysis/sampling/ACHRSampler.m). 
 [OptGpSampler](http://cs.ru.nl/~wmegchel/optGpSampler/) provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launches.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of this work that the speedup achieved with the generation of warmup points is greater than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. In OptGpSampler, each worker gets the same amount of points and steps to compute, the problem is statsically loaded by design.
 While if we perform the generation of warmup points separetly from sampling, the problem can be dynamically balanced because the workers can generate uneven number of points. 
