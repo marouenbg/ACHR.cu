@@ -87,7 +87,7 @@ of points per file, and nSteps is the number of steps per point.
 
 OptGP sampler
 
-### Future improvments
+### Future improvements
 
 Potentially an MPI/CUDA hybrid to take advantage of the multi-GPU arhcitecture of recent NVIDIA cards like the K80.
 
