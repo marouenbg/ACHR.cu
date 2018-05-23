@@ -4,7 +4,7 @@ The repo also contains VFwarmup which an implementation of the generation of sam
 
 The sampling of the solution space of metabolic models is a two-step process:
 
-1. Generation of warmup points
+### Generation of warmup points
 
 The first step of sampling the solution space of metabolic networks involves the generation of warmup points that are solutions of the metabolic model's linear program. The sampling MCMC chain starts from those solutions to explore the solution space. The generation of p warmup points corresponds to flux variability analysis (FVA) solutions for the first p < 2n points, with n the number of reactions in the network, and to randomly generated solutions genrated through a randomc objective vector c for the p > 2n points.
 
@@ -27,17 +27,21 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 *did not converge after 20,000 seconds.
 
 The speed up is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
+Also, I noted that would the model can be largely imbalanced due to the generation of a random c vector, that averaging 3 experiments can be insufficient to get the mean run time and smooth out the outliers. In particular run times between 16 and 32 cores were similar. Averaging more than 3 experiments can further show speed up between the settings.
 
-1.1. Software and hardware requirements
+1. Software and hardware requirements
 
 createWarmupVF require OpenMP and MPI through, OpenMPI implementation,and IBM CPLEX 12.6.3.
 
-1.2. Quick guide
+2. Quick guide
 
 After successful make, the call to createWarmupVF is performed as follows:
 
+`mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps SCAIND`
 
-2. The actual sampling of the solution space starting from the warmup points.
+with nCores the number of devices that do not share memory, nThreads is the number of memory-sharing threads, SCAIND can be -1 ,+1, or 0 for the different scaling parameters of CPLEX. -1 is recommended for metabolism expression models.
+
+### The actual sampling of the solution space starting from the warmup points.
 
 Sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR serial function using one sampling chain and the data was saved every 1000 points. The GPU parallel version creates one chain for each point. 
@@ -45,11 +49,11 @@ Each thread in the GPU executes one chain. Morevoer, each thread can call additi
 In this case, the speed up with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base functions such as min and max.
 
 
-| Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40 |
-| ------------- |:------------------:| ---------------:|----------------------|----------|
-| Ecoli core    | 1000               | 1000            |42                    |          |
-| Ecoli core    | 5000               | 1000            |208                   |  |
-| Ecoli core    | 10000              | 1000            |420                   |  |
+| Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
+| ------------- |:------------------:| ---------------:|----------------------|-------------|
+| Ecoli core    | 1000               | 1000            |42                    | 2.9 (SVD)   |      |
+| Ecoli core    | 5000               | 1000            |208                   | 12.5 (SVD)  |
+| Ecoli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
 | P Putida      | 1000               | 1000            |103                   | 17.5  (SVD) |
 | P Putida      | 5000               | 1000            |516                   | 70.84 (SVD) |
 | P Putida      | 10000              | 1000            |1081                  | 138   (SVD) |
@@ -65,25 +69,25 @@ While computing the SVD of the S matrix is more precise than QR, it is not prone
 
 Computing the null space through QR decompostion is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes colmuns below a given precision of the SV.
 
-2.1. Software and Hardware requirements
+1. Software and hardware requirements
 
 ACHR.cu requires CUDA 8.0 and works on sm_35 hardware and above. This is particularly due to the use of nested parallelism that is only available in these versions.
 It also requires CPLEX 12.6.3 and GSL library of linear algebra (for the sequential version of SVD and QR).
 
-2.2. Quick guide
+2. Quick guide
 
 After successful make, the call to ACHR.cu is perfomred as follows:
 
-`ACHR.cu model.mps warmuppoints.csv nFiles nPoints nSteps`
+`./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
 
 The model has to be provided in `.mps` format, the warmup points are the ouput file of the createWarmupVF, nFiles is the number of files in the output, nPoints is the number
 of points per file, and nSteps is the number of steps per point.
 
-3. Comparison to existing software
+### Comparison to existing software
 
 OptGP sampler
 
-4. Future improvments
+### Future improvments
 
 Potentially an MPI/CUDA hybrid to take advantage of the multi-GPU arhcitecture of recent NVIDIA cards like the K80.
 
