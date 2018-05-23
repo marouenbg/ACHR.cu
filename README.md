@@ -32,6 +32,11 @@ The speed up is impressive (up to 50x in some cases) and shows the power of dyna
 
 createWarmupVF require OpenMP and MPI through, OpenMPI implementation,and IBM CPLEX 12.6.3.
 
+1.2. Quick guide
+
+After successful make, the call to createWarmupVF is performed as follows:
+
+
 2. The actual sampling of the solution space starting from the warmup points.
 
 Sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
@@ -65,9 +70,22 @@ Computing the null space through QR decompostion is faster but less precise and 
 ACHR.cu requires CUDA 8.0 and works on sm_35 hardware and above. This is particularly due to the use of nested parallelism that is only available in these versions.
 It also requires CPLEX 12.6.3 and GSL library of linear algebra (for the sequential version of SVD and QR).
 
-3- Comparison to existing software
+2.2. Quick guide
+
+After successful make, the call to ACHR.cu is perfomred as follows:
+
+`ACHR.cu model.mps warmuppoints.csv nFiles nPoints nSteps`
+
+The model has to be provided in `.mps` format, the warmup points are the ouput file of the createWarmupVF, nFiles is the number of files in the output, nPoints is the number
+of points per file, and nSteps is the number of steps per point.
+
+3. Comparison to existing software
 
 OptGP sampler
+
+4. Future improvments
+
+Potentially an MPI/CUDA hybrid to take advantage of the multi-GPU arhcitecture of recent NVIDIA cards like the K80.
 
 ### Acknowledgments
 The experiments were carried out using the HPC facilities of the University of Luxembourg (hpc.uni.lu)
