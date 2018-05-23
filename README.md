@@ -69,3 +69,5 @@ It also requires CPLEX 12.6.3 and GSL library of linear algebra (for the sequent
 
 OptGP sampler
 
+### Acknowledgments
+The experiments were carried out using the HPC facilities of the University of Luxembourg (hpc.uni.lu)
