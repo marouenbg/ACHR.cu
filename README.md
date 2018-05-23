@@ -25,6 +25,7 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 | Ec Matrix     | NA*                | 5275            |4986|924|224 |118|117|
 
 *did not converge after 20,000 seconds.
+
 The speed up is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
 
 2- The actual sampling of the solution space starting from the warmup points.
@@ -47,9 +48,12 @@ In this case, the speed up with the GPU is quite important in the table below. I
 | Recon2        | 5000               | 1000            |                      |  |
 | Recon2        | 10000              | 1000            |                      |  |
 
-*SVD and QR refer to the impelementation of the null space computation. 
+*SVD and QR refer to the impelementation of the null space computation.
+ 
 The implementation of null space was a major determinant in the final run time and the fastest implementation was reported in the final run times.
+
 While computing the SVD of the S matrix is more precise than QR, it is not prone for parallel computation in the GPU which can be even slower than the CPU in some cases.
+
 Computing the null space through QR decompostion is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes colmuns below a given precision of the SV.
 
  
