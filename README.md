@@ -12,6 +12,7 @@ The genration of warmup points is a time-copnsuming process and requires the use
 To remediate to this issue, dynamic loading balancing impelented through the OpenMP parallel library in C allows to assign less points to workers that required more time to solve previous chunks. In the end, the workers converge at the same time.
 Below I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) and through a hybrid MPI/OpenMP impelementation (CreateWarmupVF). 
 Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. We can divide by the number of cores to get the times (at best) for a parallel version.The experiments are the average of 3 trials in every settings.
+
 | Model         | CreateWarmupMATLAB | CreateWarmupVF  |CreateWarmupVF  |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |
 | ------------- |:------------------:| ---------------:|----|---|---|---|---|
 | Cores         | 1                  | 1               |2   |4  |8  |16 |32 |
@@ -21,6 +22,7 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 | Recon2        | 11346              |     288         |186 |30 |32  |24 |21|
 | E Matrix      | NA*                |   602           |508 |130|52  |43 |43|
 | Ec Matrix     | NA*                | 5275            |4986|924|224 |118|117|
+
 *did not converge after 20,000 seconds.
 The speed up is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
 
