@@ -1,5 +1,7 @@
 *.o
 *.mat
 *.csv
+*.stderr
+*.stdout
 File*
 ACHRCuda
