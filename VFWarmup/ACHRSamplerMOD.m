@@ -25,7 +25,7 @@ if (nargin < 8) || isempty(fileBaseNo)
   fileBaseNo = 0;
 end
 if (nargin < 9) || isempty(maxTime)
-    maxTime = 10*3600;
+    maxTime = 1000*3600;
 end
 tic;
 N = null(full(model.S)'*full(model.S));
