@@ -1,4 +1,5 @@
 [![DOI](https://zenodo.org/badge/133329310.svg)](https://zenodo.org/badge/latestdoi/133329310)
+[![TRAVIS](https://travis-ci.com/marouenbg/ACHR.cu.svg?branch=master)](https://travis-ci.com/marouenbg/ACHR.cu)
 
 This repo contains the code for ACHR.cu the cuda GPU implementation of the sampling algorithm ACHR.
 
