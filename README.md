@@ -1,4 +1,3 @@
-mqking this repo citable
 This repo contains the code for ACHR.cu the cuda GPU implementation of the sampling algorithm ACHR.
 
 The repo also contains VFwarmup which is an implementation of the generation of sampling warmup points using dynamic load balancing.
