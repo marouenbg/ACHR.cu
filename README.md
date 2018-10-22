@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/133329310.svg)](https://zenodo.org/badge/latestdoi/133329310)
+
 This repo contains the code for ACHR.cu the cuda GPU implementation of the sampling algorithm ACHR.
 
 The repo also contains VFwarmup which is an implementation of the generation of sampling warmup points using dynamic load balancing.
