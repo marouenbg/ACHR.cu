@@ -83,10 +83,6 @@ C_EX = createWarmupPts
 
 all_c: $(C_EX) $(CX_EX)
 
-#execute_c: $(C_EX) $(CX_EX)
-#	 ./diet -r /home/marouen.benguebila/P:/Projects/veryfastFVA/diet.dat
-
-# ------------------------------------------------------------
 
 clean :
 	/bin/rm -rf *.o *~ *.class
