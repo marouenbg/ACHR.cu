@@ -3,5 +3,6 @@
 *.csv
 *.stderr
 *.stdout
+ACHRerror.txt
 File*
 ACHRCuda

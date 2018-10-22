@@ -104,3 +104,6 @@ While if we perform the generation of warmup points separetly from sampling, the
 
 The experiments were carried out using the [HPC facilities of the University of Luxembourg](http://hpc.uni.lu)
 
+# License
+
+The project is licensed under the MIT license, see the file [LICENSE](<https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE>) for details.

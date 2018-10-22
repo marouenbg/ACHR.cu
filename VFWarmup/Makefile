@@ -9,17 +9,22 @@ LIBFORMAT  = static_pic
 #
 #------------------------------------------------------------
 
-CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
-#CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
-#CONCERTDIR    = ../../../../concert
-
+ifndef TRAVIS
+	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
+	#CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
+	#CONCERTDIR    = ../../../../concert
+else
+	CPLEXDIR      = /home/travis/travis/cplex
+endif
 # ---------------------------------------------------------------------
 # Compiler selection 
 # ---------------------------------------------------------------------
 
-
-CC  = mpicc -O0 -fopenmp -std=c99 -D_POSIX_C_SOURCE=199309L
-
+ifndef TRAVIS 
+	CC  = mpicc -O0 -fopenmp -std=c99 -D_POSIX_C_SOURCE=199309L
+else
+	CC  = mpicc -O0 -fopenmp -std=c99 -D_POSIX_C_SOURCE=199309L -coverage
+endif
 
 # ---------------------------------------------------------------------
 # Compiler options 
