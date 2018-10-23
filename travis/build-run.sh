@@ -25,7 +25,9 @@ case "$MPI_IMPL" in
 	make
 	#simple test
 	#1 core 2 threads
-	mpirun -np 1 --bind-to none -x OMP_NUM_THREADS=2 ./createWarmupPts ./lib/P_Putida.mps -1 <<< $'1000\n'
+	#output non-interactive parameters
+	echo "1000\n" > data.text
+	mpirun -np 1 --bind-to none -x OMP_NUM_THREADS=2 ./createWarmupPts ./lib/P_Putida.mps -1 < data.text
         export TMPDIR=/tmp
         ;;
 esac
