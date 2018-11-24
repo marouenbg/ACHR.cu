@@ -35,6 +35,9 @@ Sampling metabolic models is a two-step process:
 
    license/index
 
+.. toctree::
+
+   tutos/index
 
 Indices and tables
 ==================
