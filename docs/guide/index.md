@@ -1,3 +1,5 @@
+# Usage guide
+
 Sampling of metabolic models is a two-step process.
 
 ## Generation of warmup points
