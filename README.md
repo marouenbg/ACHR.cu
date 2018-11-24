@@ -38,6 +38,13 @@ Sampling is a two-step process:
 
 1. The generation of warmup points.
 
+Quick installation
+```
+cd VFWarmup
+./install.sh
+make
+```
+Then run the generation of warmup points
 ```
 mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps
 ```

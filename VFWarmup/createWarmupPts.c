@@ -191,7 +191,7 @@ int main (int argc, char **argv){
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	FILE *fp;
 	char fileName[100] = "warmup.csv";
-	char modelName[100], nPtsStr[10];
+	char modelName[100], finalName[300], nPtsStr[10];
 	double *centPt = NULL; // initialize center point
 	
 	/*Initialize MPI*/
@@ -322,8 +322,9 @@ int main (int argc, char **argv){
 	//itoa(nPts, nPtsStr, 10);
 	//strcat(nPtsStr, ".csv");
 	//strcat(modelName, fileName);
-	sprintf(modelName,"%s%d%s",modelName,nPts,fileName);
-	fp=fopen(modelName,"w+");
+        modelName[strlen(modelName)-4] = '\0';//remove extension
+	sprintf(finalName,"%s%d%s",modelName,nPts,fileName);
+	fp=fopen(finalName,"w+");
 	if(rank==0){
 		for(i=0;i<n;i++){
 			for(j=0;j<nPts-1;j++){
