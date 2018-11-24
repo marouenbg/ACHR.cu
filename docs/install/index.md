@@ -15,6 +15,32 @@ To generate warmup points for metabolic models, we will use the `VFWarmup` tool 
 + OpenMp comes by default in the latest gcc versions
 
 + MPI through the OpenMPI 1.10.3 implementation
+You can use the following code snippet to install MPI
+```
+                    VERSION=3.1.2
+                    wget --no-check-certificate https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-$VERSION.tar.gz
+                    tar -xzf openmpi-$VERSION.tar.gz
+                    cd openmpi-$VERSION
+                    mkdir build && cd build
+                    ../configure CFLAGS="-w" --prefix=$TRAVIS_ROOT/open-mpi \
+                                --without-verbs --without-fca --without-mxm --without-ucx \
+                                --without-portals4 --without-psm --without-psm2 \
+                                --without-libfabric --without-usnic \
+                                --without-udreg --without-ugni --without-xpmem \
+                                --without-alps --without-munge \
+                                --without-sge --without-loadleveler --without-tm \
+                                --without-lsf --without-slurm \
+                                --without-pvfs2 --without-plfs \
+                                --without-cuda --disable-oshmem \
+                                --disable-mpi-fortran --disable-oshmem-fortran \
+                                --disable-libompitrace \
+                                --disable-mpi-io  --disable-io-romio \
+                                --disable-static #--enable-mpi-thread-multiple
+                    make -j2
+                    make install
+```
+
+Once the required dependencies installed, `cd ACHR.cu/VFWarmup` then `make` at the root of `VFWarmup`.
 
 ## Sampling
 
@@ -29,3 +55,5 @@ This architecture is needed as `ACHR.cu` uses nested parallelism to gain even hi
 + CUDA v8.0
 
 + GSL linear algebra library needed for the sequential SVD and QR. 
+
+Once the required dependencies installed, `make` at the root of `ACHRcu`
