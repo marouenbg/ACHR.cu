@@ -13,7 +13,9 @@ Here you can find tutorials on the installation and analysis of ACHR.cu samplng 
 General approach
 ==================
 Sampling metabolic models is a two-step process:
+
 1. Generation of warmup points.
+
 2. The actual sampling using the warmup points as a starting point.
 
 .. toctree::
