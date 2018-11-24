@@ -14,7 +14,7 @@ To generate warmup points for metabolic models, we will use the `VFWarmup` tool 
 
 + OpenMp comes by default in the latest gcc versions
 
-+ MPI through the OpenMPI 1.10.3
++ MPI through the OpenMPI 1.10.3 implementation
 
 ## Sampling
 

@@ -10,13 +10,15 @@ more complex, the sampling of the solution space of a metabolic model becomes un
 objective function. In order to address the large analysis time for large metabolic models, I implemented a GP-GPU version of ACHR that reduces the sampling time but at least a factor of 10x.
 Here you can find tutorials on the installation and analysis of ACHR.cu samplng software.
 
-General approach
-==================
+General approach and parallel construct
+========================================
 Sampling metabolic models is a two-step process:
 
 1. Generation of warmup points.
 
 2. The actual sampling using the warmup points as a starting point.
+
+Talk about parllel construct
 
 Contents
 ========
