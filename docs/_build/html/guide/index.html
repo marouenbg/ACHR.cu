@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage guide &mdash; ACHR.cu 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tutorials" href="../tutos/index.html" />
+    <link rel="prev" title="Installation guide" href="../install/index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> ACHR.cu
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install/index.html">Installation guide</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generation-of-warmup-points">Generation of warmup points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sampling">Sampling</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tutos/index.html">Tutorials</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../license/index.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ACHR.cu</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage guide</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/guide/index.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage-guide">
+<span id="usage-guide"></span><h1>Usage guide<a class="headerlink" href="#usage-guide" title="Permalink to this headline">¶</a></h1>
+<p>Sampling of metabolic models is a two-step process.</p>
+<div class="section" id="generation-of-warmup-points">
+<span id="generation-of-warmup-points"></span><h2>Generation of warmup points<a class="headerlink" href="#generation-of-warmup-points" title="Permalink to this headline">¶</a></h2>
+<p>The generation of warmup points is done through <code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code> software. After installing the dependencies of <code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code>, you can build the binaries at the root of
+<code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code> using <code class="docutils literal notranslate"><span class="pre">make</span></code>.</p>
+<p>Then call <code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code> as follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">-np</span> <span class="pre">nCores</span> <span class="pre">--bind-to</span> <span class="pre">none</span> <span class="pre">-x</span> <span class="pre">OMP_NUM_THREADS=nThreads</span> <span class="pre">createWarmupPts</span> <span class="pre">model.mps</span> <span class="pre">SCAIND</span></code></p>
+<p>Replace the following variables with your own parameters:</p>
+<ul class="simple">
+<li>nCores: the number of non-shared memory cores you wish to use for teh analysis</li>
+<li>nThreads: the number of shared memory threads within one core</li>
+<li>model.mps: the metabolic model in <code class="docutils literal notranslate"><span class="pre">.mps</span></code> format. To convert a model in <code class="docutils literal notranslate"><span class="pre">.mat</span></code> format to <code class="docutils literal notranslate"><span class="pre">.mps</span></code>, you can use the provided converter <code class="docutils literal notranslate"><span class="pre">convertProblem.m</span></code></li>
+<li>SCAIND: (optional) corresponds to the scaling CPLEX parameter SCAIND and can take the values 0 (equilibration scaling: default), 1(aggressive scaling), -1 (no scaling).
+scaling is usually desactivated with tightly constrained metabolic model such as coupled models to avoid numerical instabilities and large solution times.</li>
+</ul>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">mpirun</span> <span class="pre">-np</span> <span class="pre">2</span> <span class="pre">--bind-to</span> <span class="pre">none</span> <span class="pre">-x</span> <span class="pre">OMP_NUM_THREADS=4</span> <span class="pre">createWarmupPts</span> <span class="pre">ecoli_core.mps</span></code></p>
+<p>You will have to input the number of warmup points to be generated, this is usually a minimum of 2n, where n is the number of reactions in a metabolic model. <code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code> will perform
+a minimization and a maximization in each dimension, which means that 2n is the minimum number of samples needed to delienate the solution space.</p>
+<p>The ouput file is saved as <code class="docutils literal notranslate"><span class="pre">modelnPtswarmup.csv</span></code>, with model is the name of the metabolic model and nPts is the number of warmup points generated.</p>
+</div>
+<div class="section" id="sampling">
+<span id="sampling"></span><h2>Sampling<a class="headerlink" href="#sampling" title="Permalink to this headline">¶</a></h2>
+<p>The actual GPU sampling is done through <code class="docutils literal notranslate"><span class="pre">ACHR.cu</span></code> software. After installing the dependencies of <code class="docutils literal notranslate"><span class="pre">ACHR.cu</span></code>, you can build the binaries at the root of <code class="docutils literal notranslate"><span class="pre">ACHR.cu</span></code> using <code class="docutils literal notranslate"><span class="pre">make</span></code>.</p>
+<p>Then call <code class="docutils literal notranslate"><span class="pre">ACHR.cu</span></code> as follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">./ACHR</span> <span class="pre">model.mps</span> <span class="pre">warmuppoints.csv</span> <span class="pre">nFiles</span> <span class="pre">nPoints</span> <span class="pre">nSteps</span></code></p>
+<p>Replace the following varaibles with you own parameters:</p>
+<ul class="simple">
+<li>model.mps: the metabolic model in <code class="docutils literal notranslate"><span class="pre">.mps</span></code> format.</li>
+<li>warmuppoints.csv: the warmup points obtained using <code class="docutils literal notranslate"><span class="pre">VFWarmup</span></code>. You can also use warmup points generated using other software such as the MATLAB CobraToolbox and Cobrapy.</li>
+<li>nFiles: Number of files to stores the sampled solution points.</li>
+<li>nPoints: number of points per file.</li>
+<li>nSteps: number of steps per point.</li>
+</ul>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">./ACHR</span> <span class="pre">ecoli_core.mps</span> <span class="pre">ecoli_core1000warmup.csv</span> <span class="pre">1</span> <span class="pre">1000</span> <span class="pre">1000</span></code></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../tutos/index.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../install/index.html" class="btn btn-neutral" title="Installation guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Marouen Ben Guebila
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'1.0',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
