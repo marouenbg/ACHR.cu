@@ -42,6 +42,10 @@ Contents
 
 .. toctree::
 
+   changelog
+
+.. toctree::
+
    license/index
 
 Indices and tables
