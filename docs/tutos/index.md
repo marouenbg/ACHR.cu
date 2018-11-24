@@ -12,7 +12,7 @@ Make sur you pick a number of warmup points greater than 95*2=190, say 200 for i
 
 Then, let's sample the solution space of Ecoli core metabolic model starting from the warmup points generated previously:
 
-./ACHR model.mps ecoli_core200warmup.csv 2 1000 1000
+`./ACHR model.mps ecoli_core200warmup.csv 2 1000 1000`
 
 We will generate 2 files contatining each 1000 points. Each points has converged after 1000 step. The total number of points generated is 2*1000=2000.
 

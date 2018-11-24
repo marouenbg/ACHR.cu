@@ -10,7 +10,7 @@ To generate warmup points for metabolic models, we will use the `VFWarmup` tool 
 ### Requirements
 + Linux-based system
 
-+ [IBM CPlex 12.6.3 Free academic version](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud)
++ [IBM CPLEX 12.6.3 Free academic version](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud)
 
 + OpenMp comes by default in the latest gcc versions
 
@@ -23,7 +23,9 @@ The actual sampling uses `ACHR.cu` and starts from the warmup points generated b
 ### Requirements
 + Linux-based system
 
-+ Nvidia GPU with sm_35 architecture. Check the specs of your card [here](https://en.wikipedia.org/wiki/CUDA)
++ Nvidia GPU with `sm_35` architecture. Check the specs of your card [here](https://en.wikipedia.org/wiki/CUDA)
 This architecture is needed as `ACHR.cu` uses nested parallelism to gain even higher speed-ups.
 
++ CUDA v8.0
 
++ GSL linear algebra library needed for the sequential SVD and QR. 
