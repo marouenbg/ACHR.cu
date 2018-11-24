@@ -8,7 +8,7 @@ Technically sampling is a two step process:
 
 1. The generation of warmup points.
 
-2. The actual sampling starting from the previously genrated warmup points.
+2. The actual sampling starting from the previously generated warmup points.
 
 # Installation
 The software can be installed via cloning this repository to your local machine and compiling `VFWarmup` (for step 1) and `ACHR.cu` (for step 2) at their root folders.
@@ -34,16 +34,18 @@ Sampling is a two-step process:
 
 1. The generation of warmup points.
 
-`mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps`
+```
+mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps
+```
 
-This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dyncamically load balanced nCores and nThreads through a hybrid MPI/OpenMP.
+This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dyncamically load balanced `nCores` and `nThreads` through a hybrid MPI/OpenMP.
 
 2. The actual sampling starting from the previously genrated warmup points.
 
 `./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
 
-This command allows to generate the actual sampling points starting from the previously generated sampling points stored in `warmuppoints.csv` to generate a total of nFiles*nPoints with each point
-requiring nSteps to converge. 
+This command allows to generate the actual sampling points starting from the previously generated sampling points stored in `warmuppoints.csv` to generate a total of `nFiles*nPoints` with each point
+requiring `nSteps` to converge. 
 
 # Acknowledgments
 
