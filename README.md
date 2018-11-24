@@ -1,3 +1,7 @@
+[![DOI](https://zenodo.org/badge/133329310.svg)](https://zenodo.org/badge/latestdoi/133329310)
+[![TRAVIS](https://travis-ci.com/marouenbg/ACHR.cu.svg?branch=master)](https://travis-ci.com/marouenbg/ACHR.cu)
+[![codecov](https://codecov.io/gh/marouenbg/ACHR.cu/branch/master/graph/badge.svg)](https://codecov.io/gh/marouenbg/ACHR.cu)
+
 # Description
 ACHR.cu is a General Purpose Graphical Processing Unit (GP-GPU) implementation of the popular sampling algorithm of metabolic models ACHR.
 Sampling is the tool of choice in metabolic modeling in unbiased analysis as it allows to explore the solution space constrained by the linear bounds without neccessarily
@@ -12,7 +16,7 @@ Technically sampling is a two step process:
 
 # Installation
 The software can be installed via cloning this repository to your local machine and compiling `VFWarmup` (for step 1) and `ACHR.cu` (for step 2) at their root folders.
-More details can be founds in the [documentation](https://achrcu.readthedocs.io/en/latest/).
+More details can be found in the [documentation](https://achrcu.readthedocs.io/en/latest/).
 
 ## Dependencies 
 
@@ -38,9 +42,9 @@ Sampling is a two-step process:
 mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps
 ```
 
-This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dyncamically load balanced `nCores` and `nThreads` through a hybrid MPI/OpenMP.
+This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dynamically load balanced `nCores` and `nThreads` through a hybrid MPI/OpenMP.
 
-2. The actual sampling starting from the previously genrated warmup points.
+2. The actual sampling starting from the previously generated warmup points.
 
 `./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
 
