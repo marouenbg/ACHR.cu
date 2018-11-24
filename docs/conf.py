@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'ACHR.cu'
+project = u'ACHRcu'
 copyright = u'2018, Marouen Ben Guebila'
 author = u'Marouen Ben Guebila'
 
