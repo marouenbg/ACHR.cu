@@ -22,6 +22,8 @@ mkdir build && cd build
                                 --disable-static #--enable-mpi-thread-multiple
 make -j2
 make install
+rm -rf ../../openmpi-$VERSION
+rm -rf ../../openmpi-$VERSION.tar.gz
 
 export PATH=$HOME/open-mpi/bin:$PATH
 
@@ -41,4 +43,4 @@ export PS1=">"
 
 #install
 ./cplex_studio$VERSION_CPLEX.linux-x86-64.bin -f "./myresponse.properties"
-
+rm -rf cplex_studio$VERSION_CPLEX.linux-x86-64.bin
