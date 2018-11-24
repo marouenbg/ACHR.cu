@@ -19,8 +19,18 @@ Sampling metabolic models is a two-step process:
 2. The actual sampling using the warmup points as a starting point.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+
+   self
+
+.. toctree::
+
+   install/index
+
+.. toctree::
+
+   guide/index
+
 
 Indices and tables
 ==================
