@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = u'ACHRcu'
+project = u'ACHR.cu'
 copyright = u'2018, Marouen Ben Guebila'
 author = u'Marouen Ben Guebila'
 
@@ -38,7 +38,12 @@ release = u'1.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['releases']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages',
+              'sphinx.ext.napoleon',
+              'sphinx_click.ext','releases']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
