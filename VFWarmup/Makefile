@@ -10,7 +10,9 @@ LIBFORMAT  = static_pic
 #------------------------------------------------------------
 
 ifndef TRAVIS
-	CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
+	#This is not the default path of CPLEX, please change it this variable if you have a different
+	#installation path
+	CPLEXDIR      = $(HOME)/CPLEX_Studio12.7.1/cplex
 	#CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
 	#CONCERTDIR    = ../../../../concert
 else
