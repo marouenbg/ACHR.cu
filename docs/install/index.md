@@ -10,7 +10,7 @@ To generate warmup points for metabolic models, we will use the `VFWarmup` tool 
 ### Requirements
 + Linux-based system
 
-+ [IBM CPLEX 12.6.3 Free academic version](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud)
++ IBM CPLEX 12.6.3 and above [Free academic version](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud)
 
 + OpenMp comes by default in the latest gcc versions
 
@@ -24,7 +24,7 @@ source ./install.sh
 make
 ```
 ### Troubleshooting
-Quick install download and installs 1) OpenMPI 2) CPLEX for 64-bit machines and 3) compiles the binary.
+Quick install downloads and installs 1) OpenMPI and 2) IBM CPLEX for 64-bit machines.
 
 You can do each step separately if quick install did not work or if you have different machine specs.
 
@@ -57,7 +57,7 @@ You might also need to add MPI path
 ```
 export PATH=$TRAVIS_ROOT/open-mpi/bin:$PATH
 ```
-+ CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the free academic version.
++ IBM CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the free academic version.
 
 Make sure that the CPLEXDIR path in `VFWarmup/Makefile` corresponds to the installation folder of CPLEX.
 
@@ -75,8 +75,27 @@ The actual sampling uses `ACHR.cu` and starts from the warmup points generated b
 + Nvidia GPU with `sm_35` architecture. Check the specs of your card [here](https://en.wikipedia.org/wiki/CUDA)
 This architecture is needed as `ACHR.cu` uses nested parallelism to gain even higher speed-ups.
 
-+ CUDA v8.0
++ CUDA v8.0 and above
 
 + GSL linear algebra library needed for the sequential SVD and QR. 
 
++ IBM CPLEX 12.6.3 and above
+ 
 Once the required dependencies installed, `make` at the root of `ACHRcu`
+
+
+### Quick install
+
+```
+cd ACHRcu
+source ./install.sh
+make
+```
+
+### Troubleshooting
+
+Quick install downloads and installs 1) CUDA 8.0 for 64 bit machines and 2) GSL.
+
+You can do each step separately if quick install did not work or if you have different machine specs.
+
++ CUDA v 8.0

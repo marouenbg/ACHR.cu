@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #1. Install Cuda 8.0 for 64-bit machines
 wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64-deb
 
