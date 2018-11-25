@@ -106,7 +106,16 @@ You might also need to add CUDA path
 export PATH=/usr/local/cuda-8.0/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH
 ```
+CUDA v 8.0 and above are required because ACHR.cu enables dynamic parallelism. For CUDA v 8.0, a GCC version < 5.0 is required.
 
+You can install GCC 4.8 like the following:
+
+```
+sudo apt install gcc-4.8 g++-4.8
+sudo ln -s /usr/bin/gcc-4.8 /usr/local/cuda/bin/gcc 
+```
+
+You can also install newer CUDA versions that support recent versions of GCC.
 
 + GSL: You can install GSL like the following
 
