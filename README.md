@@ -41,7 +41,7 @@ Sampling is a two-step process:
 Quick installation
 ```
 cd VFWarmup
-./install.sh
+source ./install.sh
 make
 ```
 Then run the generation of warmup points

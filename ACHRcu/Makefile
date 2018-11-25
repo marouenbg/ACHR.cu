@@ -11,7 +11,7 @@ LIBFORMAT  = static_pic
 
 #CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 GSLDIR        = /usr/include/gsl
-CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
+CPLEXDIR      =  $(HOME)/CPLEX_Studio12.7.1/cplex
 #CONCERTDIR    = ../../../../concert
 
 # ---------------------------------------------------------------------

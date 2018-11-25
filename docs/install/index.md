@@ -20,7 +20,7 @@ To generate warmup points for metabolic models, we will use the `VFWarmup` tool 
 
 ```
 cd VFWarmup
-./install.sh
+source ./install.sh
 make
 ```
 ### Troubleshooting
