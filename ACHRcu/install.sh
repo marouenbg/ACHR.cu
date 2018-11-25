@@ -1,11 +1,13 @@
 #!/bin/sh
 
 #1. Install Cuda 8.0 for 64-bit machines
-wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64-deb
+wget https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64
 
-sudo dpkg -i cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64-deb
+sudo dpkg -i cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64-deb
 
-rm cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64.deb
+sudo apt-key add /var/cuda-repo-10-0/7fa2af80.pub
+
+rm cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64-deb
 
 sudo apt-get update
 
@@ -19,3 +21,5 @@ export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH
 
 #2. Install GSL
 sudo apt-get install libgsl-dev
+
+
