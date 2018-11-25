@@ -2,6 +2,7 @@
 Changelog
 ==========
 
+* :feature:`-` Added quick install script
 * :support:`-` Improve the changelog structure
 * :feature:`-` Changelog added to the doc
 * :feature:`-` Improve the docs

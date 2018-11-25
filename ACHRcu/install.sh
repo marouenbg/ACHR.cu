@@ -11,7 +11,7 @@ sudo apt-get update
 
 sudo apt-get install aptitude
 
-sudo apt-get install cuda
+sudo aptitude install cuda
 
 export PATH=/usr/local/cuda-8.0/bin:$PATH
 
