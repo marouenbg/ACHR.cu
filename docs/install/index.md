@@ -55,7 +55,7 @@ make install
 You might also need to add MPI path
 
 ```
-export PATH=$TRAVIS_ROOT/open-mpi/bin:$PATH
+export PATH=$HOME/open-mpi/bin:$PATH
 ```
 + IBM CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the free academic version.
 
@@ -98,4 +98,26 @@ Quick install downloads and installs 1) CUDA 8.0 for 64 bit machines and 2) GSL.
 
 You can do each step separately if quick install did not work or if you have different machine specs.
 
-+ CUDA v 8.0
++ CUDA v 8.0: You can download CUDA [here](https://developer.nvidia.com/cuda-80-ga2-download-archive), then follow the instructions for the installation.
+
+You might also need to add CUDA path
+
+```
+export PATH=/usr/local/cuda-8.0/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH
+```
+
+
++ GSL: You can install GSL like the following
+
+```
+sudo apt-get install libgsl-dev
+```
+
++ IBM CPLEX: check the installation of `VFWarmup` for the download and install of IBM CPLEX.
+
+Make sure that the CPLEXDIR path in `ACHRcu/Makefile` corresponds to the installation folder of CPLEX.
+
++ Once the required dependencies installed, `cd ACHR.cu/ACHRcu` then `make` at the root of `ACHRcu`.
+
++ Alternatively, you can open an issue [here](https://github.com/marouenbg/ACHR.cu/issues).

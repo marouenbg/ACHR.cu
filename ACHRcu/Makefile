@@ -9,10 +9,10 @@ LIBFORMAT  = static_pic
 #
 #------------------------------------------------------------
 
-#CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 GSLDIR        = /usr/include/gsl
+#Please check the CPLEX directory, the default installation directory is commented below
 CPLEXDIR      =  $(HOME)/CPLEX_Studio12.7.1/cplex
-#CONCERTDIR    = ../../../../concert
+#CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 
 # ---------------------------------------------------------------------
 # Compiler selection 
@@ -93,8 +93,6 @@ clean :
 ACHRCuda: ACHRCuda.o
 	$(CC) $(CFLAGS) $(CLNDIRS) $(GSL_LIBS) -o ACHRCuda ACHRCuda.o $(CLNFLAGS)  
 ACHRCuda.o: $(EXSRCC)/ACHRCuda.cu
-	#$(CC) -c $(CFLAGS) /home/users/mbenguebila/veryfastFVA/veryfastFVA.c -o veryfastFVA.o -lrt
-	#$(CC) -c $(CFLAGS) /home/marouen.benguebila/P:/Projects/veryfastFVA/veryfastFVA.c -o veryfastFVA.o 
 	$(CC) -c $(CFLAGS) ACHRCuda.cu -o ACHRCuda.o
 
 
