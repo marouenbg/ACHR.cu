@@ -24,9 +24,9 @@ cd VFWarmup
 make
 ```
 ### Troubleshooting
-Quick install download and installs 1) OpenMPI 2) CPLEX and compiles the binary.
+Quick install download and installs 1) OpenMPI 2) CPLEX for 64-bit machines and 3) compiles the binary.
 
-You can do each step separetly if quick install did not work.
+You can do each step separately if quick install did not work or if you have different machine specs.
 
 + MPI: You can use the following code snippet to install MPI
 ```
@@ -57,9 +57,9 @@ You might also need to add MPI path
 ```
 export PATH=$TRAVIS_ROOT/open-mpi/bin:$PATH
 ```
-+ CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the academic version.
++ CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the free academic version.
 
-Make sure that the CPLEXDIR path in `VFWarmup/Makefile` corresponds to the installation of CPLEX.
+Make sure that the CPLEXDIR path in `VFWarmup/Makefile` corresponds to the installation folder of CPLEX.
 
 + Once the required dependencies installed, `cd ACHR.cu/VFWarmup` then `make` at the root of `VFWarmup`.
 
