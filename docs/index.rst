@@ -27,7 +27,7 @@ Briefly, if a worker gets a high computational load then the idle workers can ta
 at least a 100x.
 
 2. The actual sampling using the warmup points as a starting point.
-With the warmup points at hand, we can proceed to the actual sampling using a cuda implementation. The architecture uses the modern specs of Nvidia cards to perform `dynamic parallelism <http://developer.download.nvidia.com/assets/cuda/files/CUDADownloads/TechBrief_Dynamic_Parallelism_in_CUDA.pdf>`_ .
+With the warmup points at hand, we can proceed to the actual sampling using a cuda implementation. The architecture uses the modern specs of Nvidia cards to perform `dynamic parallelism <https://devblogs.nvidia.com/cuda-dynamic-parallelism-api-principles/>`_ .
 In fact, there will be p random starting points at the same time (first level of parallelism) that will each launch n random chains to sample the solution space. This procedure is repeated
 a number of times taking each time a new starting point and saving the sampled points.
 In particular each chain will sample the local space close to its starting point, which could improve the convergence of the algorithm and avoid the blocking of the sampling chain in 
