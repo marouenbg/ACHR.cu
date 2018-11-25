@@ -28,7 +28,7 @@ Quick install download and installs 1) OpenMPI 2) CPLEX and compiles the binary.
 
 You can do each step separetly if quick install did not work.
 
-. MPI: You can use the following code snippet to install MPI
++ MPI: You can use the following code snippet to install MPI
 ```
 VERSION=3.1.2
 wget --no-check-certificate https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-$VERSION.tar.gz
@@ -57,13 +57,13 @@ You might also need to add MPI path
 ```
 export PATH=$TRAVIS_ROOT/open-mpi/bin:$PATH
 ```
-. CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the academic version.
++ CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the academic version.
 
 Make sure that the CPLEXDIR path in `VFWarmup/Makefile` corresponds to the installation of CPLEX.
 
-. Once the required dependencies installed, `cd ACHR.cu/VFWarmup` then `make` at the root of `VFWarmup`.
++ Once the required dependencies installed, `cd ACHR.cu/VFWarmup` then `make` at the root of `VFWarmup`.
 
-. Alternatively, you can open an issue [here](https://github.com/marouenbg/ACHR.cu/issues).
++ Alternatively, you can open an issue [here](https://github.com/marouenbg/ACHR.cu/issues).
 
 ## Sampling
 
