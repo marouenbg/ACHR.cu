@@ -64,7 +64,11 @@ The experiments were carried out using the [HPC facilities of the University of 
 
 # License
 
-The project is licensed under the MIT license, see the file [LICENSE](<https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt>) for details.
+The software is free ańd is licensed under the MIT license, see the file [LICENSE](<https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt>) for details.
+
+# Feedback/Issues
+
+Please report any issues to the [issues page](https://github.com/marouenbg/ACHR.cu/issues).
 
 # Code of Conduct
 
