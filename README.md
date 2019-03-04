@@ -1,6 +1,7 @@
 [![DOI](https://zenodo.org/badge/133329310.svg)](https://zenodo.org/badge/latestdoi/133329310)
 [![TRAVIS](https://travis-ci.com/marouenbg/ACHR.cu.svg?branch=master)](https://travis-ci.com/marouenbg/ACHR.cu)
 [![codecov](https://codecov.io/gh/marouenbg/ACHR.cu/branch/master/graph/badge.svg)](https://codecov.io/gh/marouenbg/ACHR.cu)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt)
 
 # Description
 ACHR.cu is a General Purpose Graphical Processing Unit (GP-GPU) implementation of the popular sampling algorithm of metabolic models ACHR.
