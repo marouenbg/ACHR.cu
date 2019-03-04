@@ -36,7 +36,7 @@ INSTALLER_LOCALE=en\n
 LICENSE_ACCEPTED=true\n
 USER_INSTALL_DIR=$HOME/CPLEX_Studio$VERSION_CPLEX"> myresponse.properties
 
-#work arounf installation bug
+#work around installation bug
 export PS1=">"
 
 #install
