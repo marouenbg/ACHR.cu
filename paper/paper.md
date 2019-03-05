@@ -22,42 +22,42 @@ The *in silico* modeling of biological organisms consists of the mathematical re
 conditions and environments as a tool for the support of wet-lab experiment or to generate hypotheses about the functioning of its subsystems. Among the many biological layers, 
 metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets, in addition to the largely 
 available public data resources that document several metabolites and their abundances. As a biotechnological application, the metabolic modeling of ethanol-producing bacteria allows 
-finding
-key interventions (such as substrate optimization) that allow increasing the yield in the bioreactor, thereby its efficiency.
+finding key interventions (such as substrate optimization) that would enable increasing the yield in the bioreactor, thereby its efficiency [@o2015using].
  
 Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled more complex modeling of biological systems. As models grew in size, the 
 tools used for their analysis have to be appropriately scaled to include the use of parallel software.
 
 A tool of choice for the analysis of metabolic models is the sampling of the space of their possible phenotypes. Instead of considering one specific biological function of interest, 
 sampling is an unbiased tool for metabolic modeling. As models grow in size, sampling became expensive both in time and computational resources. To make sampling more accessible in the 
-modeler ´s toolbox, I suggest ACHR.cu which is a CUDA based implementation of the sampling algorithm ACHR.
+modeler´s toolbox, I present ACHR.cu which is a CUDA-based [@nickolls2008scalable] implementation of the sampling algorithm ACHR [@kaufman1998direction].
 
 # Results
 
-Mathematically, metabolic models are networks of metabolites involved in reactions and are formulated as linear programs.  The solution of the linear program allows finding flux 
-distributions in the network that achieve the objective function of interest. ACHR allows obtaining flux distribution for each reaction under the conditions of optimality.
+Mathematically, metabolic models are networks of metabolites involved in reactions and are formulated as linear programs [@o2015using]. The solution of the linear program allows 
+finding flux distributions in the network that achieve the objective function of interest. ACHR allows obtaining flux distribution for each reaction under the conditions of optimality.
 
 The sampling of the solution space of metabolic models is a two-step process:
 
 ## Generation of warmup points
 
 The first step of sampling the solution space of metabolic networks involves the generation of warmup points that are solutions of the metabolic model's linear program. The sampling 
-MCMC chain starts from those solutions to explore the solution space. The generation of p warmup points corresponds to flux variability analysis (FVA) solutions for the first p < 2n 
-points, with n the number of reactions in the network, and corresponds to randomly generated solutions generated through a random objective vector c for the p > 2n points.
+MCMC chain starts from those solutions to explore the solution space. The generation of p warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
+for the first p < 2n points, with n the number of reactions in the network, and corresponds to randomly generated solutions generated through a random objective vector c for the p > 2n 
+points.
 
 The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the c cores of the 
 computer is often performed through static balancing; which means that each core gets p/c points to generate. Nevertheless, the formulation of the problem induces a significant 
-imbalance in the distribution of work, meaning that the workers will not converge at the same time which slows down the overall process. I showed previously that FVA is imbalanced 
-especially with metabolism-expression models. In this case, the generation of warmup points through random c vectors of objective coefficients is yet another factor to favor the 
-imbalance between the points to generate.
+imbalance in the distribution of work, suggesting that the workers will not converge at the same time which slows down the overall process. I showed previously that FVA is imbalanced, 
+especially with metabolism-expression models [@guebila2018dynamic]. In this case, the generation of warmup points through random c vectors of objective coefficients is yet another 
+factor to favor the imbalance between the points to generate.
 
-To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C allows assigning fewer points to workers that required more time to solve 
-previous chunks. In the end, the workers converge at the same time.
+To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required 
+more time to solve previous chunks. In the end, the workers converge at the same time.
 Below, I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) and through a hybrid MPI/OpenMP implementation (CreateWarmupVF), both for the generation 
 of 30,000 warmup points. 
 Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. The run times can be divided by the number of cores 
 to get the times (at best) for a parallel run.
-The experiments are the average of 3 trials in every setting in seconds.
+The experiments are the average of three trials in every setting in seconds.
 
 | Model         | CreateWarmupMATLAB | CreateWarmupVF  |CreateWarmupVF  |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |
 | ------------- |:------------------:| ---------------:|----------------|---|-------|---|---|
@@ -73,7 +73,7 @@ The experiments are the average of 3 trials in every setting in seconds.
 
 The speedup is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
 Also, I noted that the model can be largely imbalanced due to the generation of a random c vector and that averaging three experiments can be insufficient to get the average run time 
-and smooth out the outliers. In particular, run times between 16 and 32 cores were similar. Averaging more than three experiments can further show speed up between the settings.
+and smooth out the outliers. In particular, run times between 16 and 32 cores were similar. Averaging more than three experiments can further show the speedup between the settings.
 
 ## The actual sampling of the solution space starting from the warmup points.
 
@@ -82,7 +82,7 @@ The sampling in MATLAB was performed using the ACHR serial function using one sa
 each point. 
 Each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the nested parallelism abilities of the new NVIDIA 
 cards.   
-In this case, the speed up with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base 
+In this case, the speedup with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base 
 functions such as min and max.
 
 
@@ -106,14 +106,13 @@ The implementation of null space was a significant determinant in the final run 
 While computing the SVD of the S matrix is more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases.
 
 Computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
-columns 
-below a given precision of the SV.
+columns below a given precision of the SV.
 
 # Comparison to existing software
 
 The parallel GPU implementation of ACHR.cu is very similar to the MATLAB Cobra Toolbox 
-[GpSampler](https://github.com/marouenbg/cobratoolbox/blob/master/src/modelAnalysis/sampling/ACHRSampler.m). 
-Another tool, [OptGpSampler](http://cs.ru.nl/~wmegchel/optGpSampler/) provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launch.
+GpSampler[@heirendt2019creation]. 
+Another tool, OptGpSampler[@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launch.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of this work that the speedup achieved with the generation 
 of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. In 
 OptGpSampler, 
@@ -125,6 +124,7 @@ parallel architecture of ACHR.cu allows faster processing of metabolic models th
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the [HPC facilities of the University of Luxembourg](http://hpc.uni.lu)
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14].
 
 # References
+
