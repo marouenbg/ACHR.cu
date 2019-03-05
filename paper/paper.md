@@ -124,7 +124,7 @@ parallel architecture of ACHR.cu allows faster processing of metabolic models th
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14].
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu).
 
 # References
 
