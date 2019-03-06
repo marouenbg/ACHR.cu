@@ -59,28 +59,28 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
 
-| Model         | CreateWarmupMATLAB | *CreateWarmupVF*                                    ||
-|:------------- |:------------------:|:---------------:|:--------------:|:-:|:-----:|:-:|--:|
-| Cores         | 1                  | 1               |2               |4  |8      |16 |32 |
-| Ecoli core    |149                 |2.8              |1.8             |0.8|0.7    |0.5|0.5|
-| P Putida      | 385                | 12.5            |13              |8  |4      |2  |2  |
-| EcoliK12      | 801                |    49           |43              |23 |10.4   |9.5|9.1|
-| Recon2        | 11346              |     288         |186             |30 |32     |24 |21 |
-| E Matrix      | NA*                |   602           |508             |130|52     |43 |43 |
-| Ec Matrix     | NA*                | 5275            |4986            |924|224    |118|117|
+| Model\Cores   | 1                  |
+|--------------:| ------------------:|
+| Ecoli core    | 149                |
+| P Putida      | 385                |
+| EcoliK12      | 801                | 
+| Recon2        | 11346              | 
+| E Matrix      | NA*                | 
+| Ec Matrix     | NA*                | 
 
-*did not converge after 20,000 seconds.
+Table 1: Runtimes of CreateWarmupMATLAB for a set of metabolic models using 1 core. *did not converge after 20,000 seconds.
 
 
-|             |          Grouping           ||
-First Header  | Second Header | Third Header |
- ------------ | :-----------: | -----------: |
-Content       |          *Long Cell*        ||
-Content       |   **Cell**    |         Cell |
+| Model\Cores   | 1               |2               |4  | 8     | 16| 32|
+|--------------:| ---------------:| --------------:|--:|------:|--:|--:|
+| Ecoli core    | 2.8             |1.8             |0.8|0.7    |0.5|0.5|
+| P Putida      | 12.5            |13              |8  |4      |2  |2  |
+| EcoliK12      | 49              |43              |23 |10.4   |9.5|9.1|
+| Recon2        | 288             |186             |30 |32     |24 |21 |
+| E Matrix      | 602             |508             |130|52     |43 |43 |
+| Ec Matrix     | 5275            |4986            |924|224    |118|117|
 
-New section   |     More      |         Data |
-And more      | With an escaped '\|'         ||  
-[Prototype table]
+Table 2: Runtimes of CreateWarmupVF for a set of metabolic models using 1,2,4,8,16, and 32 cores.
 
 
 The speedup is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
@@ -99,7 +99,7 @@ functions such as min and max.
 
 
 | Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
-| ------------- |:------------------:| ---------------:|----------------------|-------------|
+| -------------:| ------------------:| ---------------:|---------------------:|------------:|
 | Ecoli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      |
 | Ecoli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
 | Ecoli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
@@ -110,9 +110,8 @@ functions such as min and max.
 | Recon2        | 5000               | 1000            |14014                 | 1110  (QR)  |
 | Recon2        | 10000              | 1000            |28026                 | 2240  (QR)  |
  
+Table 3: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models. *SVD and QR refer to the implementation of the null space computation.
 
-*SVD and QR refer to the implementation of the null space computation.
- 
 The implementation of null space was a significant determinant in the final run time, and the fastest implementation was reported in the final run times.
 
 While computing the SVD of the S matrix is more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases.
