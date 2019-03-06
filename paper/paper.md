@@ -59,7 +59,7 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
 
-| Model\Cores   | 1                  |
+| Model\\Cores  | 1                  |
 |---------------| -------------------|
 | Ecoli core    | 149                |
 | P Putida      | 385                |
@@ -71,7 +71,7 @@ The experiments are the average of three trials in every setting in seconds.
 Table 1: Runtimes of CreateWarmupMATLAB for a set of metabolic models using 1 core. *did not converge after 20,000 seconds.
 
 
-| Model\Cores   | 1               |2               |4  | 8     | 16| 32|
+| Model\\Cores  | 1               |2               |4  | 8     | 16| 32|
 |---------------| ----------------|----------------|---|-------|---|---|
 | Ecoli core    | 2.8             |1.8             |0.8|0.7    |0.5|0.5|
 | P Putida      | 12.5            |13              |8  |4      |2  |2  |
