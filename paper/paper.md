@@ -60,7 +60,7 @@ to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
 
 | Model\Cores   | 1                  |
-|--------------:| ------------------:|
+|---------------| -------------------|
 | Ecoli core    | 149                |
 | P Putida      | 385                |
 | EcoliK12      | 801                | 
@@ -72,7 +72,7 @@ Table 1: Runtimes of CreateWarmupMATLAB for a set of metabolic models using 1 co
 
 
 | Model\Cores   | 1               |2               |4  | 8     | 16| 32|
-|--------------:| ---------------:| --------------:|--:|------:|--:|--:|
+|---------------| ----------------|----------------|---|-------|---|---|
 | Ecoli core    | 2.8             |1.8             |0.8|0.7    |0.5|0.5|
 | P Putida      | 12.5            |13              |8  |4      |2  |2  |
 | EcoliK12      | 49              |43              |23 |10.4   |9.5|9.1|
