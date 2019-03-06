@@ -59,8 +59,8 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
 
-| Model         | CreateWarmupMATLAB | CreateWarmupVF                                      ||
-| ------------- |:------------------:| ---------------:|----------------|---|-------|---|---|
+| Model         | CreateWarmupMATLAB | *CreateWarmupVF*                                    ||
+|:------------- |:------------------:|:---------------:|:--------------:|:-:|:-----:|:-:|--:|
 | Cores         | 1                  | 1               |2               |4  |8      |16 |32 |
 | Ecoli core    |149                 |2.8              |1.8             |0.8|0.7    |0.5|0.5|
 | P Putida      | 385                | 12.5            |13              |8  |4      |2  |2  |
@@ -70,6 +70,18 @@ The experiments are the average of three trials in every setting in seconds.
 | Ec Matrix     | NA*                | 5275            |4986            |924|224    |118|117|
 
 *did not converge after 20,000 seconds.
+
+
+|             |          Grouping           ||
+First Header  | Second Header | Third Header |
+ ------------ | :-----------: | -----------: |
+Content       |          *Long Cell*        ||
+Content       |   **Cell**    |         Cell |
+
+New section   |     More      |         Data |
+And more      | With an escaped '\|'         ||  
+[Prototype table]
+
 
 The speedup is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
 Also, I noted that the model can be largely imbalanced due to the generation of a random c vector and that averaging three experiments can be insufficient to get the average run time 
