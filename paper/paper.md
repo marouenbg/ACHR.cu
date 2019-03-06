@@ -53,8 +53,8 @@ factor to favor the imbalance between the points to generate.
 
 To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required 
 more time to solve previous chunks. In the end, the workers converge at the same time.
-Below, I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) and through a hybrid MPI/OpenMP implementation (CreateWarmupVF), both for the generation 
-of 30,000 warmup points. 
+Below, I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) (Table 1) and through a hybrid MPI/OpenMP implementation (CreateWarmupVF) (Table 2), 
+both for the generation of 30,000 warmup points. 
 Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. The run times can be divided by the number of cores 
 to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
@@ -94,12 +94,13 @@ The sampling in MATLAB was performed using the ACHR serial function using one sa
 each point. 
 Each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the nested parallelism abilities of the new NVIDIA 
 cards.   
-In this case, the speedup with the GPU is quite important in the table below. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB base 
+In this case, the speedup with the GPU is quite important as reported in table 3. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
+base 
 functions such as min and max.
 
 
 | Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
-| -------------:| ------------------:| ---------------:|---------------------:|------------:|
+| --------------| -------------------| ----------------|----------------------|-------------|
 | Ecoli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      |
 | Ecoli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
 | Ecoli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
