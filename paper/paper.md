@@ -59,7 +59,7 @@ Since the original implementation in MATLAB does not support parallelism, I repo
 to get the times (at best) for a parallel run.
 The experiments are the average of three trials in every setting in seconds.
 
-| Model         | CreateWarmupMATLAB | CreateWarmupVF  |CreateWarmupVF  |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |CreateWarmupVF |
+| Model         | CreateWarmupMATLAB | CreateWarmupVF                                      ||
 | ------------- |:------------------:| ---------------:|----------------|---|-------|---|---|
 | Cores         | 1                  | 1               |2               |4  |8      |16 |32 |
 | Ecoli core    |149                 |2.8              |1.8             |0.8|0.7    |0.5|0.5|
@@ -110,9 +110,8 @@ columns below a given precision of the SV.
 
 # Comparison to existing software
 
-The parallel GPU implementation of ACHR.cu is very similar to the MATLAB Cobra Toolbox 
-GpSampler[@heirendt2019creation]. 
-Another tool, OptGpSampler[@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launch.
+The parallel GPU implementation of ACHR.cu is very similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
+Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launch.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of this work that the speedup achieved with the generation 
 of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. In 
 OptGpSampler, 
