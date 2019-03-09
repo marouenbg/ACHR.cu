@@ -53,7 +53,13 @@ mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts mod
 This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dynamically load balanced `nCores` and `nThreads` through a hybrid MPI/OpenMP.
 
 2. The actual sampling starting from the previously generated warmup points.
-
+Quick install first.
+```
+cd ACHRcu
+source ./install.sh
+make
+```
+Then perform the sampling.
 `./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
 
 This command allows to generate the actual sampling points starting from the previously generated sampling points stored in `warmuppoints.csv` to generate a total of `nFiles*nPoints` with each point
