@@ -19,16 +19,21 @@ bibliography: paper.bib
 # Summary
 
 The *in silico* modeling of biological organisms consists of the mathematical representation of key functions of a biological system and the study of its behavior in different 
-conditions and environments as a tool for the support of wet-lab experiment or to generate hypotheses about the functioning of its subsystems. Among the many biological layers, 
-metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets, in addition to the largely 
-available public data resources that document several metabolites and their abundances. As a biotechnological application, the metabolic modeling of ethanol-producing bacteria allows 
-finding key interventions (such as substrate optimization) that would enable increasing the yield in the bioreactor, thereby its efficiency [@o2015using].
+conditions and environments. It serves as a tool for the support of wet-lab experiments or to generate hypotheses about the functioning of the subsystems. Among the many biological 
+products, 
+metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets. 
+Moreover, public data resources of several metabolites and their abundances have been developing rapidly in the recent years. As a biotechnological application, the metabolic modeling 
+of ethanol-producing 
+bacteria allows 
+finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor, thereby its efficiency [@mahadevan2005applications].
  
-Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled more complex modeling of biological systems. As models grew in size, the 
+Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled more complex modeling of biological systems. As models expand in size, the 
 tools used for their analysis have to be appropriately scaled to include the use of parallel software.
 
 A tool of choice for the analysis of metabolic models is the sampling of the space of their possible phenotypes. Instead of considering one specific biological function of interest, 
-sampling is an unbiased tool for metabolic modeling. As models grow in size, sampling became expensive both in time and computational resources. To make sampling more accessible in the 
+sampling is an unbiased tool for metabolic modeling that explores all the space of possible metabolic phenotypes. For large models, sampling becomes expensive both in time and 
+computational resources. To make 
+sampling more accessible in the 
 modeler´s toolbox, I present ACHR.cu which is a CUDA-based [@nickolls2008scalable] implementation of the sampling algorithm ACHR [@kaufman1998direction].
 
 # Results
@@ -83,7 +88,7 @@ Table 1: Runtimes of CreateWarmupMATLAB for a set of metabolic models using 1 co
 Table 2: Runtimes of CreateWarmupVF for a set of metabolic models using 1,2,4,8,16, and 32 cores.
 
 
-The speedup is impressive (up to 50x in some cases) and shows the power of dynamic load balancing in imbalanced metabolic models.
+The speedup was substantial (up to 50x in some cases) and showed the power of dynamic load balancing in imbalanced metabolic models.
 Also, I noted that the model can be largely imbalanced due to the generation of a random c vector and that averaging three experiments can be insufficient to get the average run time 
 and smooth out the outliers. In particular, run times between 16 and 32 cores were similar. Averaging more than three experiments can further show the speedup between the settings.
 
@@ -91,8 +96,9 @@ and smooth out the outliers. In particular, run times between 16 and 32 cores we
 
 The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for 
-each point. 
-Each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the nested parallelism abilities of the new NVIDIA 
+each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the nested dynamic parallelism 
+abilities of 
+the new NVIDIA 
 cards.   
 In this case, the speedup with the GPU is quite important as reported in table 3. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
 base 
@@ -122,16 +128,16 @@ columns below a given precision of the SV.
 
 # Comparison to existing software
 
-The parallel GPU implementation of ACHR.cu is very similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
-Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a C implementation and fewer but longer sampling chains launch.
+The architecture of the parallel GPU implementation of ACHR.cu is similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
+Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a i) C implementation and ii) fewer but longer sampling chains launch.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of this work that the speedup achieved with the generation 
 of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. In 
 OptGpSampler, 
-each worker gets the same amount of points and steps to compute; the problem is statically loaded by design.
+each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
 While if we perform the generation of warmup points separately from sampling, the problem can be dynamically balanced because the workers can generate an uneven number of points. 
 
 Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Taken together, the 
-parallel architecture of ACHR.cu allows faster processing of metabolic models thereby accelerating biomedical discovery.
+parallel architecture of ACHR.cu allows faster sampling of metabolic models over existing tools thereby enabling the unbiased analyses of large-scale systems biology models.
 
 # Acknowledgments
 
