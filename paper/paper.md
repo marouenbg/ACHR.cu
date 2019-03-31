@@ -96,8 +96,9 @@ and smooth out the outliers. In particular, run times between 16 and 32 cores we
 
 The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for 
-each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the nested dynamic parallelism 
-abilities of 
+each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic 
+parallelism 
+capabilities of 
 the new NVIDIA 
 cards.   
 In this case, the speedup with the GPU is quite important as reported in table 3. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
