@@ -23,8 +23,7 @@ conditions and environments. It serves as a tool for the support of wet-lab expe
 products, 
 metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets. 
 Moreover, public data resources of several metabolites and their abundances have been developing rapidly in the recent years. As a biotechnological application, the metabolic modeling 
-of ethanol-producing 
-bacteria allows 
+of ethanol-producing bacteria allows 
 finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor, thereby its efficiency [@mahadevan2005applications].
  
 Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled more complex modeling of biological systems. As models expand in size, the 
@@ -34,7 +33,7 @@ A tool of choice for the analysis of metabolic models is the sampling of the spa
 sampling is an unbiased tool for metabolic modeling that explores all the space of possible metabolic phenotypes. For large models, sampling becomes expensive both in time and 
 computational resources. To make 
 sampling more accessible in the 
-modeler´s toolbox, I present ACHR.cu which is a CUDA-based [@nickolls2008scalable] implementation of the sampling algorithm ACHR [@kaufman1998direction].
+modeler´s toolbox, I present ACHR.cu which is a fast, CUDA-based [@nickolls2008scalable] implementation of the sampling algorithm ACHR [@kaufman1998direction].
 
 # Results
 
@@ -58,52 +57,18 @@ factor to favor the imbalance between the points to generate.
 
 To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required 
 more time to solve previous chunks. In the end, the workers converge at the same time.
-Below, I report the run times of the generation of warmup points in MATLAB (CreateWarmupMATLAB) (Table 1) and through a hybrid MPI/OpenMP implementation (CreateWarmupVF) (Table 2), 
-both for the generation of 30,000 warmup points. 
-Since the original implementation in MATLAB does not support parallelism, I reported the run times for the sequential version below. The run times can be divided by the number of cores 
-to get the times (at best) for a parallel run.
-The experiments are the average of three trials in every setting in seconds.
 
-| Model\\Cores  | 1                  |
-|---------------| -------------------|
-| Ecoli core    | 149                |
-| P Putida      | 385                |
-| EcoliK12      | 801                | 
-| Recon2        | 11346              | 
-| E Matrix      | NA*                | 
-| Ec Matrix     | NA*                | 
-
-Table 1: Runtimes of CreateWarmupMATLAB for a set of metabolic models using 1 core. *did not converge after 20,000 seconds.
-
-
-| Model\\Cores  | 1               |2               |4  | 8     | 16| 32|
-|---------------| ----------------|----------------|---|-------|---|---|
-| Ecoli core    | 2.8             |1.8             |0.8|0.7    |0.5|0.5|
-| P Putida      | 12.5            |13              |8  |4      |2  |2  |
-| EcoliK12      | 49              |43              |23 |10.4   |9.5|9.1|
-| Recon2        | 288             |186             |30 |32     |24 |21 |
-| E Matrix      | 602             |508             |130|52     |43 |43 |
-| Ec Matrix     | 5275            |4986            |924|224    |118|117|
-
-Table 2: Runtimes of CreateWarmupVF for a set of metabolic models using 1,2,4,8,16, and 32 cores.
-
-
-The speedup was substantial (up to 50x in some cases) and showed the power of dynamic load balancing in imbalanced metabolic models.
-Also, I noted that the model can be largely imbalanced due to the generation of a random c vector and that averaging three experiments can be insufficient to get the average run time 
-and smooth out the outliers. In particular, run times between 16 and 32 cores were similar. Averaging more than three experiments can further show the speedup between the settings.
+The speedup of the generation of warmup points using the hybrid MPI/OpenMP implementation (CreateWarmupVF) over the MATLAB version (CreateWarmupMATLAB) was substantial 
+(up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in imbalanced metabolic models.
 
 ## The actual sampling of the solution space starting from the warmup points.
 
 The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
-The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for 
+The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for 
 each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic 
-parallelism 
-capabilities of 
-the new NVIDIA 
-cards.   
-In this case, the speedup with the GPU is quite important as reported in table 3. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
-base 
-functions such as min and max.
+parallelism capabilities of the new NVIDIA cards.   
+In this case, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
+base functions such as min and max.
 
 
 | Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
@@ -118,7 +83,7 @@ functions such as min and max.
 | Recon2        | 5000               | 1000            |14014                 | 1110  (QR)  |
 | Recon2        | 10000              | 1000            |28026                 | 2240  (QR)  |
  
-Table 3: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models. *SVD and QR refer to the implementation of the null space computation.
+Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
 The implementation of null space was a significant determinant in the final run time, and the fastest implementation was reported in the final run times.
 
