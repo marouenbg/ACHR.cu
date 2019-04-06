@@ -1,5 +1,5 @@
 ---
-title: 'ACHR.cu: GPU sampling of metabolic networks.'
+title: 'ACHR.cu: GPU accelerated sampling of metabolic networks.'
 tags:
   - cuda
   - metabolism
