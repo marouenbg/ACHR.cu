@@ -35,7 +35,7 @@ The actual GPU sampling is done through `ACHR.cu` software. After installing the
 
 Then call `ACHR.cu` as follows:
 
-`./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
+`./ACHRCuda model.mps warmuppoints.csv nFiles nPoints nSteps`
 
 Replace the following varaibles with you own parameters:
 
@@ -49,6 +49,7 @@ Replace the following varaibles with you own parameters:
 
 + nSteps: number of steps per point.
 
-Example: `./ACHR ecoli_core.mps ecoli_core1000warmup.csv 1 1000 1000`
+Example: `./ACHRCuda ecoli_core.mps ecoli_core1000warmup.csv 1 1000 
+1000`
 
 

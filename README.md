@@ -62,7 +62,7 @@ make
 ```
 Then perform the sampling.
 
-`./ACHR model.mps warmuppoints.csv nFiles nPoints nSteps`
+`./ACHRCuda model.mps warmuppoints.csv nFiles nPoints nSteps`
 
 This command allows to generate the actual sampling points starting from the previously generated sampling points stored in `warmuppoints.csv` to generate a total of `nFiles*nPoints` with each point
 requiring `nSteps` to converge. 
