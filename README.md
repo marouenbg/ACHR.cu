@@ -33,6 +33,12 @@ More details can be found in the [documentation](https://achrcu.readthedocs.io/e
 
 + Nvidia GPU with sm_35 architecture and above. Check the [documentation](https://achrcu.readthedocs.io/en/latest/) for more details on the requirements.
 
+# Reproducibility
+
+Have a look at the [code ocean capusle](https://codeocean.com/capsule/4395814/tree) to run ACHR.cu in an interactive container with a sample example. The capsule has an access to an 
+NVIDIA GPU with all software
+dependencies cached.
+
 # Quick guide
 
 Sampling is a two-step process:
