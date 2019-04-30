@@ -103,7 +103,10 @@ createWarmupPts.o: $(EXSRCC)/createWarmupPts.c
 	#$(CC) -c $(CFLAGS) /home/marouen.benguebila/P:/Projects/veryfastFVA/veryfastFVA.c -o veryfastFVA.o 
 	$(CC) -c $(CFLAGS) createWarmupPts.c -o createWarmupPts.o
 
-
+test:
+	echo "Running test"
+	echo "1000\n" > data.text
+	mpirun -np 1 --bind-to none -x OMP_NUM_THREADS=2 createWarmupPts lib/P_putida.mps < data.text
 # Local Variables:
 # mode: makefile
 # End:
