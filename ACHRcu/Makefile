@@ -99,3 +99,7 @@ ACHRCuda.o: $(EXSRCC)/ACHRCuda.cu
 # Local Variables:
 # mode: makefile
 # End:
+
+test:
+	echo "Running test"
+	./ACHRCuda ../VFWarmup/lib/P_putida.mps ../VFWarmup/P_putida1000warmup.csv 1 100 100
