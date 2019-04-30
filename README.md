@@ -51,7 +51,7 @@ cd VFWarmup
 source ./install.sh
 make
 ```
-Then run the generation of warmup points
+Make sure to run source on the install script because it exports environment variables. Then run the generation of warmup points
 ```
 mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps
 ```
@@ -66,7 +66,7 @@ cd ACHRcu
 source ./install.sh
 make
 ```
-Then perform the sampling.
+Also here, make sure to run source on the install script because it exports environment variables. Then perform the sampling.
 
 `./ACHRCuda model.mps warmuppoints.csv nFiles nPoints nSteps`
 
