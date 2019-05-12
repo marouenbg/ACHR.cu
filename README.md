@@ -35,7 +35,7 @@ More details can be found in the [documentation](https://achrcu.readthedocs.io/e
 
 # Reproducibility
 
-Have a look at the [code ocean capusle](https://codeocean.com/capsule/4395814/tree) to run ACHR.cu in an interactive container with a sample example. The capsule has an access to an 
+Have a look at the [code ocean capusle](https://codeocean.com/capsule/2291048/tree/v1) to run ACHR.cu in an interactive container with a sample example. The capsule has an access to an 
 NVIDIA GPU with all software
 dependencies cached.
 
