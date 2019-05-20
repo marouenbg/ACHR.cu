@@ -58,7 +58,7 @@ The speedup of the generation of warmup points using the hybrid MPI/OpenMP imple
 
 The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
-In this case, the speedup with the GPU is quite important when compared to CPU as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with MATLAB 
+In this case, the speedup with the GPU is quite important when compared to CPU as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
 base functions such as min and max.
 
 
@@ -81,7 +81,7 @@ The implementation of null space was a significant determinant in the final runt
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases.
 
 However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
-columns below a given precision of the SV.
+columns below a given precision of the singular values.
 
 Finally, ACHR.cu was developed as a high-performance tool for the modeling of metabolic networks using a parallel architecture that segregates the generation of warmup points and the sampling.
 
