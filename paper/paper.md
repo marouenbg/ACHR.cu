@@ -16,7 +16,7 @@ date: 03 March 2019
 bibliography: paper.bib
 ---
 
-# Summary
+# Introduction
 
 The *in silico* modeling of biological organisms consists of the mathematical representation of key functions of a biological system and the study of its behavior in different conditions and environments. It serves as a tool for the support of wet lab experiments and for the generation of hypotheses about the functioning of the subsystems. Among the many biological 
 products, 
