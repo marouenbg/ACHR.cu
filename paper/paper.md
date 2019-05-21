@@ -58,15 +58,15 @@ The speedup of the generation of warmup points using the hybrid MPI/OpenMP imple
 
 ## Sampling of the solution space
 
-The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
-The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
+Conceptually, the sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
+The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
 When compared to the CPU, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
 base functions such as min and max.
 
 
 | Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
 | --------------| -------------------| ----------------|----------------------|-------------|
-| Ecoli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      |
+| Ecoli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      
 | Ecoli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
 | Ecoli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
 | P Putida      | 1000               | 1000            |103                   | 17.5  (SVD) |
@@ -78,11 +78,9 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-The implementation of null space was a significant determinant in the final runtime, and the fastest implementation was reported in the final result. Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
+The implementation of null space computation was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
-While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases.
-
-However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
+While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
 columns below a given precision of the singular values.
 
 Finally, ACHR.cu was developed as a high-performance tool for the modeling of metabolic networks using a parallel architecture that segregates the generation of warmup points and the sampling.
