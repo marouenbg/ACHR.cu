@@ -41,20 +41,22 @@ The sampling of the solution space of metabolic models is a two-step process:
 
 ## Generation of warmup points
 
-The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions of the metabolic model's linear program. The sampling 
-MCMC chain starts from those solutions to explore the solution space. The generation of p warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
+The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling 
+Markov Chain Monte Carlo (MCMC) chain starts from those solutions to explore the solution space. 
+
+The generation of p warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
 for the first p < 2n points, with n the number of reactions in the network, and corresponds to randomly generated solutions generated through a random objective vector c for the p > 2n 
 points.
 
 The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the c cores of the computer is often performed through static balancing with each core getting p/c points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. I showed previously that FVA is imbalanced, 
-especially with metabolism-expression models [@guebila2018dynamic]. In this case, the generation of warmup points through random c vectors of objective coefficients is yet another factor to favor the imbalance between the points to generate.
+especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor the imbalance between the parallel workers.
 
-To remediate to this issue, dynamic loading balancing implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks. In the end, the workers converge at the same time.
+To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks. In the end, the workers converge at the same time.
 
 The speedup of the generation of warmup points using the hybrid MPI/OpenMP implementation (CreateWarmupVF) over the MATLAB version (CreateWarmupMATLAB) was substantial 
 (up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in imbalanced metabolic models. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
 
-## The actual sampling of the solution space starting from the warmup points.
+## Sampling of the solution space
 
 The sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version creates one chain for each point and each thread in the GPU executes one chain. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
@@ -76,7 +78,7 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-The implementation of null space was a significant determinant in the final runtime, and the fastest implementation was reported in the final result. Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or SVD were used.
+The implementation of null space was a significant determinant in the final runtime, and the fastest implementation was reported in the final result. Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases.
 
