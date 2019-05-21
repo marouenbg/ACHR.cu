@@ -21,7 +21,7 @@ bibliography: paper.bib
 The *in silico* modeling of biological organisms consists of the mathematical representation of key functions of a biological system and the study of its behavior in different conditions and environments. It serves as a tool for the support of wet lab experiments and for the generation of hypotheses about the functioning of the subsystems. Among the many biological 
 products, 
 metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets. 
-Moreover, public data resources of several metabolites and their abundances have been developing rapidly in recent years. In biotechnology, the metabolic modeling 
+Moreover, public data resources of several metabolites and their abundances have been developing rapidly in recent years enabling applications in many areas. In biotechnology, the metabolic modeling 
 of ethanol-producing bacteria allows 
 finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor, thereby its efficiency [@mahadevan2005applications].
  
