@@ -82,7 +82,7 @@ Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models st
 
 The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
-While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
+While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix in contrast to SVD that removes 
 columns below a given precision of the singular values.
 
 Finally, ACHR.cu was developed as a high-performance tool for the modeling of metabolic networks using a parallel architecture that segregates the generation of warmup points and the sampling.
