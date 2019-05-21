@@ -53,7 +53,7 @@ especially with metabolism-expression models [@guebila2018dynamic]. The generati
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
-The speedup of the generation of warmup points using the hybrid MPI/OpenMP implementation (CreateWarmupVF) over the MATLAB version (CreateWarmupMATLAB) was substantial 
+Given this background, the speedup of the generation of warmup points using the hybrid MPI/OpenMP implementation (CreateWarmupVF) over the MATLAB version (CreateWarmupMATLAB) was substantial 
 (up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in imbalanced metabolic models. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
 
 ## Sampling of the solution space
@@ -78,7 +78,7 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-The implementation of null space computation was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
+A central assumption in metabolic modeling is the steady state assumption, which translates mathematically in finding the null space of the stoichiometric matrix S. The implementation of null space computation was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
 columns below a given precision of the singular values.
