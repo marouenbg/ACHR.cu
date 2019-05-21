@@ -35,7 +35,9 @@ modeler´s toolbox, I present ACHR.cu which is a fast, CUDA-based [@nickolls2008
 
 # Results
 
-Metabolic models are networks of metabolites involved in reactions and are formulated as linear programs [@o2015using]. The solution of the linear program allows finding flux distributions in the network that achieve the objective function of interest. ACHR allows obtaining flux distribution for each reaction under the conditions of optimality.
+Metabolic models are networks of m metabolites involved in n reactions and are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central concept in metabolic modeling is the steady state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady state assumption translates to finding the null space of the stoichiometric matrix S(m,n). 
+
+Particularly, the solution of the linear program allows finding flux distributions in the network that achieve the objective function of interest. ACHR allows obtaining flux distribution for each reaction under the conditions of optimality.
 
 The sampling of the solution space of metabolic models is a two-step process:
 
@@ -78,7 +80,7 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-A central assumption in metabolic modeling is the steady state assumption, which translates mathematically in finding the null space of the stoichiometric matrix S. The implementation of null space computation was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
+The implementation of null space computation was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix as opposed to SVD that removes 
 columns below a given precision of the singular values.
