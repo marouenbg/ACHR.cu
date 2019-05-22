@@ -35,7 +35,7 @@ modeler´s toolbox, I present ACHR.cu which is a fast, CUDA-based [@nickolls2008
 
 # Results
 
-Metabolic models are networks of m metabolites involved in n reactions and are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central concept in metabolic modeling is the steady state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady state assumption translates to constraining the solution space to the null space of the stoichiometric matrix S(m,n). 
+Metabolic models are networks of m metabolites involved in n reactions. Briefly, they are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central hypothesis in metabolic modeling is the steady state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady state assumption translates to constraining the solution space to the null space of the stoichiometric matrix S(m,n). 
 
 Particularly, the solution of the linear program allows finding flux distributions in the network that achieve the objective function of interest. ACHR allows obtaining flux distribution for each reaction under the conditions of optimality.
 
