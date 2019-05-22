@@ -50,7 +50,7 @@ The generation of p <a href="https://www.codecogs.com/eqnedit.php?latex=\geq" ta
 for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, it corresponds to solutions generated using a random objective vector c(n,1).
 
 The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the nc cores of the computer is often performed through static balancing with each core getting p/nc points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. I showed previously that FVA is imbalanced, 
-especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor the imbalance between the parallel workers.
+especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor ill-conditioned problems and the imbalance between the parallel workers.
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
