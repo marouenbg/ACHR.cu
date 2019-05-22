@@ -46,7 +46,7 @@ The sampling of the solution space of metabolic models is a two-step process:
 The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling 
 Markov Chain Monte Carlo (MCMC) chain starts from those solutions to explore the solution space. 
 
-The generation of p warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
+The generation of p &gt 2n warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
 for the first p < 2n points, with n the number of reactions in the network, and corresponds to randomly generated solutions generated through a random objective vector c for the p > 2n 
 points.
 
