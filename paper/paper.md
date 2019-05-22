@@ -60,7 +60,7 @@ Given this background, the speedup of the generation of warmup points using the 
 
 ## Sampling of the solution space
 
-Conceptually, the sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
+Second, the sampling of the solution space of metabolic models involves the generation of MCMC chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and the data was saved every 1000 points. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
 When compared to the CPU, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
 base functions such as min and max.
@@ -89,7 +89,7 @@ Finally, ACHR.cu was developed as a high-performance tool for the modeling of me
 
 # Comparison to existing software
 
-The architecture of the parallel GPU implementation of ACHR.cu is similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
+Conceptually, the architecture of the parallel GPU implementation of ACHR.cu is similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
 Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a i) C implementation and ii) fewer but longer sampling chains launch.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
 In contrast, if the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced because the workers can generate an uneven number of warmup points and converge simulatenously. 
