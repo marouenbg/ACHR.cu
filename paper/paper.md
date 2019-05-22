@@ -47,7 +47,7 @@ The first step of sampling the solution space of metabolic models involves the g
 Markov Chain Monte Carlo (MCMC) chain starts from those solutions to explore the solution space. 
 
 The generation of p <a href="https://www.codecogs.com/eqnedit.php?latex=\geq" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\geq" title="\geq" /></a> 2n warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
-for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, it corresponds to solutions generated using a random objective vector c(1,n).
+for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, it corresponds to solutions generated using a random objective vector c(n,1).
 
 The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the nc cores of the computer is often performed through static balancing with each core getting p/nc points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. I showed previously that FVA is imbalanced, 
 especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor the imbalance between the parallel workers.
