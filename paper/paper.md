@@ -79,7 +79,7 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported in the final result (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
+The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported (Table 1). Particularly, there was a tradeoff in memory usage and access as opposed to computation time when either QR or Singular Value Decomposition (SVD) were used.
 
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix in contrast to SVD that removes 
 columns below a given precision of the singular values.
