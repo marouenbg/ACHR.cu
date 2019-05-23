@@ -35,7 +35,7 @@ modeler´s toolbox, I present ACHR.cu which is a fast, CUDA-based [@nickolls2008
 
 # Results
 
-Metabolic models are networks of m metabolites involved in n reactions. Briefly, they are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central hypothesis in metabolic modeling is the steady state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady state assumption translates to constraining the solution space to the null space of the stoichiometric matrix S(m,n). 
+Metabolic models are networks of m metabolites involved in n reactions. Briefly, they are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central hypothesis in metabolic modeling is the steady-state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady-state assumption translates to constraining the solution space to the null space of the stoichiometric matrix S(m,n). 
 
 The solution of the linear program allows finding flux values in the network that achieve the objective function of interest. Particularly, ACHR allows obtaining a distribution of possible fluxes for each reaction.
 
@@ -79,7 +79,7 @@ base functions such as min and max.
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
-The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported (Table 1). Particularly, there was a tradeoff between memory usage and access, and the computation time when either QR or Singular Value Decomposition (SVD) were used.
+The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported (Table 1). Particularly, there was a tradeoff between memory usage and access, and the computation time when either QR or Singular Value Decomposition (SVD) was used.
 
 While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix in contrast to SVD that removes 
 columns below a given precision of the singular values.
@@ -91,14 +91,14 @@ Finally, ACHR.cu was developed as a high-performance tool for the modeling of me
 Conceptually, the architecture of the parallel GPU implementation of ACHR.cu is similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
 Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides a 40x speedup over GpSampler through a i) C implementation and ii) fewer but longer sampling chains launch.
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
-In contrast, when the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced and the parallel workers are ensured to converge simulatenously. 
+In contrast, when the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced and the parallel workers are ensured to converge simultaneously. 
 
 Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Taken together, the 
 parallel architecture of ACHR.cu allows faster sampling of metabolic models over existing tools thereby enabling the unbiased analyses of large-scale systems biology models.
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author ackowledges the support of the National Centre
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the National Centre
 of Excellence in Research (FNR-NCER-PD) on Parkinson’s disease of the Fonds National de la Recherche of Luxembourg.
 
 # References
