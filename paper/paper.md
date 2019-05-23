@@ -98,6 +98,7 @@ parallel architecture of ACHR.cu allows faster sampling of metabolic models over
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu).
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author ackowledges the support of the National Centre
+of Excellence in Research (FNR-NCER-PD) on Parkinson’s disease of the Fonds National de la Recherche of Luxembourg.
 
 # References
