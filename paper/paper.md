@@ -10,7 +10,7 @@ authors:
    orcid: 0000-0001-5934-966X
    affiliation: "1"
 affiliations:
- - name: Luxembourg Centre for Systems Biomedicine, University of Luxembourg.
+ - name: Luxembourg Centre for Systems Biomedicine, University of Luxembourg, Esch-sur-Alzette, Luxembourg.
    index: 1
 date: 03 March 2019
 bibliography: paper.bib
