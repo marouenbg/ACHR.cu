@@ -23,7 +23,7 @@ products,
 metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets. 
 Moreover, public data resources of several metabolites and their abundances have been developing rapidly in recent years thereby enabling applications in many areas. In biotechnology, the metabolic modeling 
 of ethanol-producing bacteria allows 
-finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor, thereby its efficiency [@mahadevan2005applications].
+finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor and its efficiency [@mahadevan2005applications].
  
 Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled complex modeling of biological systems. As models expand in size, the 
 tools used for their analysis have to be appropriately scaled to include the use of parallel software.
