@@ -704,6 +704,7 @@ int main(int argc, char **argv){
 	//printf("number of misses is %d \n",nMisses);
 	//Finalize
 	
+	/*TOC*/
         clock_gettime(CLOCK_REALTIME, &now);
         elapsedTime = (double)((now.tv_sec+now.tv_nsec*1e-9) - (double)(tmstart.tv_sec+tmstart.tv_nsec*1e-9));
 
