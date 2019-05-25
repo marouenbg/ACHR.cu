@@ -18,9 +18,9 @@ bibliography: paper.bib
 
 # Introduction
 
-The *in silico* modeling of biological organisms consists of the mathematical representation of key functions of a biological system and the study of its behavior in different conditions and environments. It serves as a tool for the support of wet lab experiments and for the generation of hypotheses about the functioning of the subsystems. Among the many biological 
+The *in silico* modeling of biological organisms consists of the mathematical representation of key functions of a biological system and the study of its behavior in different conditions and environments. It serves as a tool to support wet lab experiments and to generate hypotheses about the functioning of the subsystems. Among the many biological 
 products, 
-metabolism is the most amenable to modeling because it is directly related to key biological functions and is the support for several drugs targets. 
+metabolism is the most amenable to modeling because it is directly related to key biological functions and processes. 
 Moreover, public data resources of several metabolites and their abundances have been developing rapidly in recent years thereby enabling applications in many areas. In biotechnology, the metabolic modeling 
 of ethanol-producing bacteria allows 
 finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor and its efficiency [@mahadevan2005applications].
@@ -54,8 +54,8 @@ especially with metabolism-expression models [@guebila2018dynamic]. The generati
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
-Given this background, the speedup of the generation of warmup points using the hybrid MPI/OpenMP implementation (CreateWarmupVF) over the MATLAB version (CreateWarmupMATLAB) was substantial 
-(up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in imbalanced metabolic models. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
+Given this background, the generation of 30,000 warmup points using an OpenMP dynamically load balanced implementation (CreateWarmupVF) [@guebila2018dynamic] and the MATLAB version (CreateWarmupMATLAB) were compared on three metabolic models i.e., E. coli core [orth2010reconstruction], P. Putida [@nogales2008genome], and Recon2 [@thiele2013community]. The speedup achieved by CreateWarmupVF over CreateWarmupMATLAB was substantial 
+(up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in ill-conditioned parallel problems. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
 
 ## Sampling of the solution space
 
@@ -65,17 +65,17 @@ When compared to the CPU, the speedup with the GPU is quite important as reporte
 base functions such as min and max.
 
 
-| Model         | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
-| --------------| -------------------| ----------------|----------------------|-------------|
-| Ecoli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      
-| Ecoli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
-| Ecoli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
-| P Putida      | 1000               | 1000            |103                   | 17.5  (SVD) |
-| P Putida      | 5000               | 1000            |516                   | 70.84 (SVD) |
-| P Putida      | 10000              | 1000            |1081                  | 138   (SVD) |
-| Recon2        | 1000               | 1000            |2815                  | 269   (QR)  |
-| Recon2        | 5000               | 1000            |14014                 | 1110  (QR)  |
-| Recon2        | 10000              | 1000            |28026                 | 2240  (QR)  |
+| Model           | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
+| ----------------| -------------------| ----------------|----------------------|-------------|
+| E. coli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      
+| E. coli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
+| E. coli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
+| P. Putida       | 1000               | 1000            |103                   | 17.5  (SVD) |
+| P. Putida       | 5000               | 1000            |516                   | 70.84 (SVD) |
+| P. Putida       | 10000              | 1000            |1081                  | 138   (SVD) |
+| Recon2          | 1000               | 1000            |2815                  | 269   (QR)  |
+| Recon2          | 5000               | 1000            |14014                 | 1110  (QR)  |
+| Recon2          | 10000              | 1000            |28026                 | 2240  (QR)  |
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
@@ -98,7 +98,7 @@ parallel architecture of ACHR.cu allows faster sampling of metabolic models over
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the National Centre
-of Excellence in Research (FNR-NCER-PD) on Parkinson’s disease of the Fonds National de la Recherche of Luxembourg.
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the Fonds National de la Recherche´s National Centre
+of Excellence in Research on Parkinson’s disease (FNR-NCER-PD).
 
 # References
