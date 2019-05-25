@@ -65,17 +65,17 @@ When compared to the CPU, the speedup with the GPU is quite important as reporte
 base functions such as min and max.
 
 
-| Model           | Points             | Steps           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
-| ----------------| -------------------| ----------------|----------------------|-------------|
-| E. coli core    | 1000               | 1000            |42                    | 2.9   (SVD) |      
-| E. coli core    | 5000               | 1000            |208                   | 12.5  (SVD) |
-| E. coli core    | 10000              | 1000            |420                   | 24.26 (SVD) |
-| P. Putida       | 1000               | 1000            |103                   | 17.5  (SVD) |
-| P. Putida       | 5000               | 1000            |516                   | 70.84 (SVD) |
-| P. Putida       | 10000              | 1000            |1081                  | 138   (SVD) |
-| Recon2          | 1000               | 1000            |2815                  | 269   (QR)  |
-| Recon2          | 5000               | 1000            |14014                 | 1110  (QR)  |
-| Recon2          | 10000              | 1000            |28026                 | 2240  (QR)  |
+| Model           | Points             | Steps/point           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
+| ----------------| -------------------| ----------------------|----------------------|-------------|
+| E. coli core    | 1000               | 1000                  |42                    | 2.9   (SVD) |      
+| E. coli core    | 5000               | 1000                  |208                   | 12.5  (SVD) |
+| E. coli core    | 10000              | 1000                  |420                   | 24.26 (SVD) |
+| P. Putida       | 1000               | 1000                  |103                   | 17.5  (SVD) |
+| P. Putida       | 5000               | 1000                  |516                   | 70.84 (SVD) |
+| P. Putida       | 10000              | 1000                  |1081                  | 138   (SVD) |
+| Recon2          | 1000               | 1000                  |2815                  | 269   (QR)  |
+| Recon2          | 5000               | 1000                  |14014                 | 1110  (QR)  |
+| Recon2          | 10000              | 1000                  |28026                 | 2240  (QR)  |
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
