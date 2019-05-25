@@ -43,8 +43,7 @@ The sampling of the solution space of metabolic models is a two-step process:
 
 ## Generation of warmup points
 
-The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling 
-Markov Chain Monte Carlo (MCMC) chain starts from those solutions to explore the solution space. 
+The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling chain starts from those solutions to explore the solution space. 
 
 The generation of p <a href="https://www.codecogs.com/eqnedit.php?latex=\geq" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\geq" title="\geq" /></a> 2n warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
 for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, they correspond to solutions generated using a random objective vector c(n,1) in the linear program.
@@ -65,17 +64,17 @@ When compared to the CPU, the speedup with the GPU is quite important as reporte
 base functions such as min and max.
 
 
-| Model           | Points             | Steps/point           |Intel Xeon (3.5 Ghz)  |Tesla K40    |
-| ----------------| -------------------| ----------------------|----------------------|-------------|
-| E. coli core    | 1000               | 1000                  |42                    | 2.9   (SVD) |      
-| E. coli core    | 5000               | 1000                  |208                   | 12.5  (SVD) |
-| E. coli core    | 10000              | 1000                  |420                   | 24.26 (SVD) |
-| P. Putida       | 1000               | 1000                  |103                   | 17.5  (SVD) |
-| P. Putida       | 5000               | 1000                  |516                   | 70.84 (SVD) |
-| P. Putida       | 10000              | 1000                  |1081                  | 138   (SVD) |
-| Recon2          | 1000               | 1000                  |2815                  | 269   (QR)  |
-| Recon2          | 5000               | 1000                  |14014                 | 1110  (QR)  |
-| Recon2          | 10000              | 1000                  |28026                 | 2240  (QR)  |
+| Model           | Metabolites/Reactions|Points             |Steps per point       |Intel Xeon (3.5 Ghz)  |Tesla K40    |
+| ----------------|--------------------- |-------------------|----------------------|----------------------|-------------|
+| E. coli core    | 72/95                |1000               |1000                  |42                    | 2.9   (SVD) |      
+| E. coli core    | 72/95                |5000               |1000                  |208                   | 12.5  (SVD) |
+| E. coli core    | 72/95                |10000              |1000                  |420                   | 24.26 (SVD) |
+| P. Putida       | 911/1060             |1000               |1000                  |103                   | 17.5  (SVD) |
+| P. Putida       | 911/1060             |5000               |1000                  |516                   | 70.84 (SVD) |
+| P. Putida       | 911/1060             |10000              |1000                  |1081                  | 138   (SVD) |
+| Recon2          | 4036/7324            |1000               |1000                  |2815                  | 269   (QR)  |
+| Recon2          | 4036/7324            |5000               |1000                  |14014                 | 1110  (QR)  |
+| Recon2          | 4036/7324            |10000              |1000                  |28026                 | 2240  (QR)  |
  
 Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
 
