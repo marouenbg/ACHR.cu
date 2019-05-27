@@ -64,7 +64,7 @@ When compared to the CPU, the speedup with the GPU is quite important as reporte
 base functions such as min and max, and that despite a large number of cores in the GPU, they are slow (0.7 GHz) in comparison to CPU (3.5 GHz).
 
 
-| Model           | Metabolites/Reactions|Points             |Steps per point       |Intel Xeon (3.5 GHz)  |Tesla K40    |
+| Model           | m/n                  |Points             |Steps per point       |Intel Xeon (3.5 GHz)  |Tesla K40    |
 | ----------------|--------------------- |-------------------|----------------------|----------------------|-------------|
 | E. coli core    | 72/95                |1000               |1000                  |42                    | 2.9   (SVD) |      
 | E. coli core    | 72/95                |5000               |1000                  |208                   | 12.5  (SVD) |
@@ -76,7 +76,7 @@ base functions such as min and max, and that despite a large number of cores in 
 | Recon2          | 4036/7324            |5000               |1000                  |14014                 | 1110  (QR)  |
 | Recon2          | 4036/7324            |10000              |1000                  |28026                 | 2240  (QR)  |
  
-Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. *SVD and QR refer to the implementation of the null space computation.
+Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. SVD and QR refer to the implementation of the null space computation, m and n respectively refer to the number of metabolites and reactions in the model.
 
 The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported (Table 1). Particularly, there was a tradeoff between memory usage and access, and the computation time when either QR or Singular Value Decomposition (SVD) was used.
 
