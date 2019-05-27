@@ -53,7 +53,7 @@ especially with metabolism-expression models [@guebila2018dynamic]. The generati
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
-Given this background, the generation of 30,000 warmup points using an OpenMP dynamically load balanced implementation (CreateWarmupVF) [@guebila2018dynamic] and the MATLAB version (CreateWarmupMATLAB) were compared on three metabolic models i.e., E. coli core [orth2010reconstruction], P. Putida [@nogales2008genome], and Recon2 [@thiele2013community]. The speedup achieved by CreateWarmupVF over CreateWarmupMATLAB was substantial 
+Given this background, the generation of 30,000 warmup points using an OpenMP dynamically load balanced implementation (CreateWarmupVF) [@guebila2018dynamic] and the MATLAB version (CreateWarmupMATLAB) were compared on three metabolic models i.e., E. coli core [orth2010reconstruction], P. putida [@nogales2008genome], and Recon2 [@thiele2013community]. The speedup achieved by CreateWarmupVF over CreateWarmupMATLAB was substantial 
 (up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in ill-conditioned parallel problems. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
 
 ## Sampling of the solution space
@@ -61,17 +61,17 @@ Given this background, the generation of 30,000 warmup points using an OpenMP dy
 Second, the sampling of the solution space of metabolic models involves the generation of sampling chains starting from the warmup points.
 The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and each point was saved after 1000 steps. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
 When compared to the CPU, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
-base functions such as min and max, and that despite the large number of cores in the GPU, they are slow (0.7 Ghz) in comparison to CPU (3.5 Ghz).
+base functions such as min and max, and that despite a large number of cores in the GPU, they are slow (0.7 GHz) in comparison to CPU (3.5 GHz).
 
 
-| Model           | Metabolites/Reactions|Points             |Steps per point       |Intel Xeon (3.5 Ghz)  |Tesla K40    |
+| Model           | Metabolites/Reactions|Points             |Steps per point       |Intel Xeon (3.5 GHz)  |Tesla K40    |
 | ----------------|--------------------- |-------------------|----------------------|----------------------|-------------|
 | E. coli core    | 72/95                |1000               |1000                  |42                    | 2.9   (SVD) |      
 | E. coli core    | 72/95                |5000               |1000                  |208                   | 12.5  (SVD) |
 | E. coli core    | 72/95                |10000              |1000                  |420                   | 24.26 (SVD) |
-| P. Putida       | 911/1060             |1000               |1000                  |103                   | 17.5  (SVD) |
-| P. Putida       | 911/1060             |5000               |1000                  |516                   | 70.84 (SVD) |
-| P. Putida       | 911/1060             |10000              |1000                  |1081                  | 138   (SVD) |
+| P. putida       | 911/1060             |1000               |1000                  |103                   | 17.5  (SVD) |
+| P. putida       | 911/1060             |5000               |1000                  |516                   | 70.84 (SVD) |
+| P. putida       | 911/1060             |10000              |1000                  |1081                  | 138   (SVD) |
 | Recon2          | 4036/7324            |1000               |1000                  |2815                  | 269   (QR)  |
 | Recon2          | 4036/7324            |5000               |1000                  |14014                 | 1110  (QR)  |
 | Recon2          | 4036/7324            |10000              |1000                  |28026                 | 2240  (QR)  |
@@ -92,7 +92,7 @@ Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides up to 40 f
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
 In contrast, when the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced and the parallel workers are ensured to converge simultaneously. 
 
-Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Additionally, the development of LP solvers on the GPU can help the development of end-to-end sampling solutions. Taken together, the 
+Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Additionally, the integration of LP solvers on the GPU [li2011gpu,@gurung2019simultaneous,@charlton2019two] can help the development of end-to-end sampling solutions. Taken together, the 
 parallel architecture of ACHR.cu allows faster sampling of metabolic models over existing tools thereby enabling the unbiased analyses of large-scale systems biology models.
 
 # Acknowledgments
