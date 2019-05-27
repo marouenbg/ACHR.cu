@@ -31,7 +31,7 @@ tools used for their analysis have to be appropriately scaled to include the use
 A tool of choice for the analysis of metabolic models is the sampling of the space of their possible phenotypes. Instead of considering one specific biological function of interest, 
 sampling is an unbiased tool for metabolic modeling that explores all the space of possible metabolic phenotypes. For large models, sampling becomes expensive both in time and computational resources. To make 
 sampling accessible in the 
-modeler´s toolbox, I present ACHR.cu which is a fast, CUDA-based [@nickolls2008scalable] implementation of the sampling algorithm ACHR [@kaufman1998direction].
+modeler´s toolbox, I present ACHR.cu which is a fast Graphical Processing Unit (GPU) implementation of the sampling algorithm ACHR [@kaufman1998direction] using CUDA [@nickolls2008scalable].
 
 # Results
 
