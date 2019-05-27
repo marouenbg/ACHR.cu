@@ -59,7 +59,7 @@ Given this background, the generation of 30,000 warmup points using an OpenMP dy
 ## Sampling of the solution space
 
 Second, the sampling of the solution space of metabolic models involves the generation of sampling chains starting from the warmup points.
-The sampling in MATLAB was performed using the ACHR sequential function using one sampling chain, and each point was saved after 1000 steps. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
+The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and each point was saved after 1000 steps. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
 When compared to the CPU, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
 base functions such as min and max, and that despite the large number of cores in the GPU, they are slow (0.7 Ghz) in comparison to CPU (3.5 Ghz).
 
