@@ -1,10 +1,11 @@
+[![DOI](http://joss.theoj.org/papers/10.21105/joss.01363/status.svg)](https://doi.org/10.21105/joss.01363)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3233085.svg)](https://doi.org/10.5281/zenodo.3233085)
 [![TRAVIS](https://travis-ci.com/marouenbg/ACHR.cu.svg?branch=master)](https://travis-ci.com/marouenbg/ACHR.cu)
 [![codecov](https://codecov.io/gh/marouenbg/ACHR.cu/branch/master/graph/badge.svg)](https://codecov.io/gh/marouenbg/ACHR.cu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt)
 
 # Description
-ACHR.cu is a General Purpose Graphical Processing Unit (GP-GPU) implementation of the popular sampling algorithm of metabolic models ACHR.
+ACHR.cu is a General Purpose Graphical Processing Unit (GP-GPU) implementation of the popular sampling algorithm of metabolic models ACHR. Check the peer-reviewed [software note](http://joss.theoj.org/papers/10.21105/joss.01363).
 Sampling is the tool of choice in metabolic modeling in unbiased analysis as it allows to explore the solution space constrained by the linear bounds without neccessarily
 assuming an objective function. As metabolic models grow in size tio represent communities of bacteria and complex human tissues, sampling became less used because of the large analysis time.
 With ACHR.cu we can achieve at least a speed up of 10x in the sampling process.
