@@ -54,7 +54,7 @@ especially with metabolism-expression models [@guebila2018dynamic]. The generati
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
 Given this background, the generation of 30,000 warmup points using an OpenMP dynamically load balanced implementation (CreateWarmupVF) [@guebila2018dynamic] and the MATLAB version (CreateWarmupMATLAB) were compared on three metabolic models i.e., E. coli core [@orth2010reconstruction], P. putida [@nogales2008genome], and Recon2 [@thiele2013community]. The speedup achieved by CreateWarmupVF over CreateWarmupMATLAB was substantial 
-(up to 50x in some cases) [@guebila2018dynamic] and showed the power of dynamic load balancing in ill-conditioned parallel problems. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
+(up to 50 fold) [@guebila2018dynamic] and showed the power of dynamic load balancing in ill-conditioned parallel problems. Using the generated warmup points, the uniform sampling process can start to explore the solution space.
 
 ## Sampling of the solution space
 
