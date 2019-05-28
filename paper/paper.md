@@ -31,7 +31,7 @@ tools used for their analysis have to be appropriately scaled to include the use
 A tool of choice for the analysis of metabolic models is the sampling of the space of their possible phenotypes. Instead of considering one specific biological function of interest, 
 sampling is an unbiased tool for metabolic modeling that explores all the space of possible metabolic phenotypes. For large models, sampling becomes expensive both in time and computational resources. To make 
 sampling accessible in the 
-modeler´s toolbox, I present ACHR.cu which is a fast Graphical Processing Unit (GPU) implementation of the sampling algorithm Artificial Centering Hit-and-Run (ACHR) [@kaufman1998direction] using the parallel computing platform CUDA [@nickolls2008scalable].
+modeler´s toolbox, we present ACHR.cu which is a fast Graphical Processing Unit (GPU) implementation of the sampling algorithm Artificial Centering Hit-and-Run (ACHR) [@kaufman1998direction] using the parallel computing platform CUDA [@nickolls2008scalable].
 
 # Results
 
@@ -48,7 +48,7 @@ The first step of sampling the solution space of metabolic models involves the g
 The generation of p $\geq$ 2n warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
 for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, they correspond to solutions generated using a random objective vector c(n,1) in the linear program.
 
-The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the nc cores of the computer is often performed through static balancing with each core getting p/nc points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. I showed previously that FVA is imbalanced, 
+The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the nc cores of the computer is often performed through static balancing with each core getting p/nc points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. We showed previously that FVA is imbalanced, 
 especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor ill-conditioned problems and the imbalance between the parallel workers.
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
@@ -89,7 +89,7 @@ Finally, ACHR.cu was developed as a high-performance tool for the modeling of me
 
 Conceptually, the architecture of the parallel GPU implementation of ACHR.cu is similar to the MATLAB Cobra Toolbox [@heirendt2019creation] GpSampler. 
 Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides up to 40 fold speedup over GpSampler through a i) C implementation and ii) fewer but longer sampling chains launch.
-Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
+Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. We decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
 In contrast, when the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced and the parallel workers are ensured to converge simultaneously. 
 
 Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Additionally, the integration of LP solvers on the GPU [@li2011gpu; @gurung2019simultaneous; @charlton2019two] can help the development of end-to-end sampling solutions. Taken together, the 
