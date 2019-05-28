@@ -23,7 +23,7 @@ products,
 metabolism is the most amenable to modeling because it is directly related to key biological functions and processes. 
 Moreover, public data resources of several metabolites and their abundances have been developing rapidly in recent years thereby enabling applications in many areas. In biotechnology, the metabolic modeling 
 of ethanol-producing bacteria allows 
-finding key interventions (such as substrate optimization) that would increase the yield in the bioreactor and improve its efficiency [@mahadevan2005applications].
+finding key interventions, such as substrate optimization, that would increase the yield in the bioreactor and improve its efficiency [@mahadevan2005applications].
  
 Recently, high-throughput technologies allowed to generate a large amount of biological data that enabled complex modeling of biological systems. As models expand in size, the 
 tools used for their analysis have to be appropriately scaled to include the use of parallel software.
@@ -45,8 +45,7 @@ The sampling of the solution space of metabolic models is a two-step process:
 
 The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling chain starts from those solutions to explore the solution space. 
 
-The generation of $p \geq 2n$ warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
-for the first $2n$ points, with $n$ the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence $2n$). For the remaining $p - 2n$ points, they correspond to solutions generated using a random objective vector $c_{(n,1)}$ in the linear program.
+The generation of $p \geq 2n$ warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions for the first $2n$ points, with $n$ the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence $2n$). For the remaining $p - 2n$ points, they correspond to solutions generated using a random objective vector $c_{(n,1)}$ in the linear program.
 
 The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the $nc$ cores of the computer is often performed through static balancing with each core getting $p/nc$ points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. We showed previously that FVA is imbalanced, 
 especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random $c$ vectors of objective coefficients is yet another factor to favor ill-conditioned problems and the imbalance between the parallel workers.
@@ -100,4 +99,4 @@ parallel architecture of ACHR.cu allows faster sampling of metabolic models over
 The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the Fonds National de la Recherche´s National Centre
 of Excellence in Research on Parkinson’s disease (FNR-NCER-PD).
 
-# Referenes
+# References
