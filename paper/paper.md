@@ -92,7 +92,7 @@ Another tool, OptGpSampler [@megchelenbrink2014optgpsampler] provides up to 40 f
 Since OptGpSampler performs the generation of the warmup points and the sampling in one process, it is clear from the results of the current work that the speedup achieved with the generation of warmup points is more significant than sampling itself. I decoupled the generation of warmup points from sampling to take advantage of dynamic load balancing with OpenMP. Additionally, in OptGpSampler each worker gets the same amount of points and steps to compute; the problem is statically load balanced by design.
 In contrast, when the generation of warmup points is performed separately from sampling, the problem can be dynamically balanced and the parallel workers are ensured to converge simultaneously. 
 
-Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Additionally, the integration of LP solvers on the GPU [@li2011gpu,@gurung2019simultaneous,@charlton2019two] can help the development of end-to-end sampling solutions. Taken together, the 
+Finally, future improvements of this work can consider an MPI/CUDA hybrid to take advantage of the multi-GPU architecture of recent NVIDIA cards like the K80. Additionally, the integration of LP solvers on the GPU [@li2011gpu; @gurung2019simultaneous; @charlton2019two] can help the development of end-to-end sampling solutions. Taken together, the 
 parallel architecture of ACHR.cu allows faster sampling of metabolic models over existing tools thereby enabling the unbiased analyses of large-scale systems biology models.
 
 # Acknowledgments
