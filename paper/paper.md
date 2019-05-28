@@ -31,7 +31,7 @@ tools used for their analysis have to be appropriately scaled to include the use
 A tool of choice for the analysis of metabolic models is the sampling of the space of their possible phenotypes. Instead of considering one specific biological function of interest, 
 sampling is an unbiased tool for metabolic modeling that explores all the space of possible metabolic phenotypes. For large models, sampling becomes expensive both in time and computational resources. To make 
 sampling accessible in the 
-modeler´s toolbox, we present ACHR.cu which is a fast Graphical Processing Unit (GPU) implementation of the sampling algorithm Artificial Centering Hit-and-Run (ACHR) [@kaufman1998direction] using the parallel computing platform CUDA [@nickolls2008scalable].
+modeler's toolbox, we present ACHR.cu which is a fast Graphical Processing Unit (GPU) implementation of the sampling algorithm Artificial Centering Hit-and-Run (ACHR) [@kaufman1998direction] using the parallel computing platform CUDA [@nickolls2008scalable].
 
 # Results
 
@@ -58,7 +58,7 @@ Given this background, the generation of 30,000 warmup points using an OpenMP dy
 ## Sampling of the solution space
 
 Second, the sampling of the solution space of metabolic models involves the generation of sampling chains starting from the warmup points.
-The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and each point was saved after 1000 steps. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (sm_35 and higher).   
+The sampling in MATLAB was performed using the ACHR serial function using one sampling chain, and each point was saved after 1000 steps. The GPU parallel version (ACHR.cu) creates one chain for each point executed by one thread in the GPU. Moreover, each thread can call additional threads to perform large matrix operations using the grid nesting and dynamic parallelism capabilities of the new NVIDIA cards (`sm_35` and higher).
 When compared to the CPU, the speedup with the GPU is quite important as reported in table 1. It is noteworthy that even for a single core, the CPU is multithreaded especially with optimized MATLAB 
 base functions such as min and max, and that despite a large number of cores in the GPU, they are slow (0.7 GHz) in comparison to CPU (3.5 GHz).
 
@@ -96,7 +96,7 @@ parallel architecture of ACHR.cu allows faster sampling of metabolic models over
 
 # Acknowledgments
 
-The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the Fonds National de la Recherche´s National Centre
+The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the Fonds National de la Recherche's National Centre
 of Excellence in Research on Parkinson’s disease (FNR-NCER-PD).
 
 # References
