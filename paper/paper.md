@@ -35,7 +35,7 @@ modeler´s toolbox, we present ACHR.cu which is a fast Graphical Processing Unit
 
 # Results
 
-Metabolic models are networks of m metabolites involved in n reactions. Briefly, they are formulated as linear programs [@o2015using] using the stoichiometric matrix S(m,n). A central hypothesis in metabolic modeling is the steady-state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady-state assumption translates to constraining the solution space to the null space of the stoichiometric matrix S(m,n). 
+Metabolic models are networks of $m$ metabolites involved in $n$ reactions. Briefly, they are formulated as linear programs [@o2015using] using the stoichiometric matrix $S_{(m,n)}$. A central hypothesis in metabolic modeling is the steady-state assumption, meaning that generating fluxes are equal to degrading fluxes and the rate of change of metabolite concentrations is null. Mathematically, the steady-state assumption translates to constraining the solution space to the null space of the stoichiometric matrix $S_{(m,n)}$. 
 
 The solution to the linear program allows finding flux values in the network that achieve the objective function of interest. Particularly, ACHR allows obtaining a distribution of possible fluxes for each reaction.
 
@@ -45,11 +45,11 @@ The sampling of the solution space of metabolic models is a two-step process:
 
 The first step of sampling the solution space of metabolic models involves the generation of warmup points that are solutions to the metabolic model's linear program. The sampling chain starts from those solutions to explore the solution space. 
 
-The generation of p $\geq$ 2n warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
-for the first 2n points, with n the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence 2n). For the remaining p - 2n points, they correspond to solutions generated using a random objective vector c(n,1) in the linear program.
+The generation of $p \geq 2n$ warmup points corresponds to flux variability analysis (FVA) [@mahadevan2003effects] solutions 
+for the first $2n$ points, with $n$ the number of reactions in the network and the objective function is to minimize and maximize each reaction in the model (hence $2n$). For the remaining $p - 2n$ points, they correspond to solutions generated using a random objective vector $c_{(n,1)}$ in the linear program.
 
-The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the nc cores of the computer is often performed through static balancing with each core getting p/nc points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. We showed previously that FVA is imbalanced, 
-especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random c vectors of objective coefficients is yet another factor to favor ill-conditioned problems and the imbalance between the parallel workers.
+The generation of warmup points is a time-consuming process and requires the use of more than one core in parallel. The distribution of the points to generate among the $nc$ cores of the computer is often performed through static balancing with each core getting $p/nc$ points to generate. Nevertheless, the formulation of the problem induces a significant imbalance in the distribution of work, meaning that the workers will not converge at the same time thereby slowing down the overall process. We showed previously that FVA is imbalanced, 
+especially with metabolism-expression models [@guebila2018dynamic]. The generation of warmup points through random $c$ vectors of objective coefficients is yet another factor to favor ill-conditioned problems and the imbalance between the parallel workers.
 
 To address the imbalance between the workers, dynamic loading balancing as implemented through the OpenMP parallel library in C [@dagum1998openmp] allows assigning fewer points to workers that required more time to solve previous chunks of reactions. In the end, the workers converge at the same time.
 
@@ -64,23 +64,23 @@ When compared to the CPU, the speedup with the GPU is quite important as reporte
 base functions such as min and max, and that despite a large number of cores in the GPU, they are slow (0.7 GHz) in comparison to CPU (3.5 GHz).
 
 
-| Model           | m/n                  |Points             |Steps per point       |Intel Xeon (3.5 GHz)  |Tesla K40    |
+| Model           | $m$/$n$                  |Points             |Steps per point       |Intel Xeon (3.5 GHz)  |Tesla K40    |
 | ----------------|--------------------- |-------------------|----------------------|----------------------|-------------|
-| E. coli core    | 72/95                |1000               |1000                  |42                    | 2.9   (SVD) |      
-| E. coli core    | 72/95                |5000               |1000                  |208                   | 12.5  (SVD) |
-| E. coli core    | 72/95                |10000              |1000                  |420                   | 24.26 (SVD) |
-| P. putida       | 911/1060             |1000               |1000                  |103                   | 17.5  (SVD) |
-| P. putida       | 911/1060             |5000               |1000                  |516                   | 70.84 (SVD) |
+| E. coli core    | 72/95                |1000               |1000                  |42                    | 2     (SVD) |      
+| E. coli core    | 72/95                |5000               |1000                  |208                   | 12    (SVD) |
+| E. coli core    | 72/95                |10000              |1000                  |420                   | 24    (SVD) |
+| P. putida       | 911/1060             |1000               |1000                  |103                   | 17    (SVD) |
+| P. putida       | 911/1060             |5000               |1000                  |516                   | 70    (SVD) |
 | P. putida       | 911/1060             |10000              |1000                  |1081                  | 138   (SVD) |
 | Recon2          | 4036/7324            |1000               |1000                  |2815                  | 269   (QR)  |
 | Recon2          | 4036/7324            |5000               |1000                  |14014                 | 1110  (QR)  |
 | Recon2          | 4036/7324            |10000              |1000                  |28026                 | 2240  (QR)  |
  
-Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. SVD and QR refer to the implementation of the null space computation, m and n respectively refer to the number of metabolites and reactions in the model.
+Table 1: Runtimes of ACHR in MATLAB and ACHR.cu for a set of metabolic models starting from 30,000 warmup points. SVD and QR refer to the implementation of the null space computation, $m$ and $n$ respectively refer to the number of metabolites and reactions in the model.
 
 The implementation of null space computation to constrain the metabolic model was a significant determinant in the final runtime, and the fastest implementation was reported (Table 1). Particularly, there was a tradeoff between memory usage and access, and the computation time when either QR or Singular Value Decomposition (SVD) was used.
 
-While computing the SVD of the S matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix in contrast to SVD that removes 
+While computing the SVD of the $S$ matrix is generally more precise than QR, it is not prone to parallel computation in the GPU which can be even slower than the CPU in some cases. However, computing the null space through QR decomposition is faster but less precise and consumes more memory as it takes all the dimensions of the matrix in contrast to SVD that removes 
 columns below a given precision of the singular values.
 
 Finally, ACHR.cu was developed as a high-performance tool for the modeling of metabolic networks using a parallel architecture that segregates the generation of warmup points and the sampling.
@@ -100,4 +100,4 @@ parallel architecture of ACHR.cu allows faster sampling of metabolic models over
 The experiments presented in this paper were carried out using the HPC facilities of the University of Luxembourg [@VBCG_HPCS14] -- see [https://hpc.uni.lu](https://hpc.uni.lu). The author acknowledges the support of the Fonds National de la Recherche´s National Centre
 of Excellence in Research on Parkinson’s disease (FNR-NCER-PD).
 
-# References
+# Referenes
