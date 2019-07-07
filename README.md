@@ -9,8 +9,8 @@ ACHR.cu is a General Purpose Graphical Processing Unit (GP-GPU) implementation o
 
 The code comes with the peer-reviewed software note [ACHR.cu: GPU accelerated sampling of metabolic networks.](http://joss.theoj.org/papers/10.21105/joss.01363).
 
-Sampling is the tool of choice in metabolic modeling in unbiased analysis as it allows to explore the solution space constrained by the linear bounds without neccessarily
-assuming an objective function. As metabolic models grow in size tio represent communities of bacteria and complex human tissues, sampling became less used because of the large analysis time.
+Sampling is the tool of choice in metabolic modeling in unbiased analysis as it allows to explore the solution space constrained by the linear bounds without necessarily
+assuming an objective function. As metabolic models grow in size to represent communities of bacteria and complex human tissues, sampling became less used because of the large analysis time.
 With ACHR.cu we can achieve at least a speed up of 10x in the sampling process.
 
 Technically sampling is a two step process:
