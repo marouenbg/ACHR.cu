@@ -95,7 +95,7 @@ The experiments were carried out using the [HPC facilities of the University of 
 
 # License
 
-The software is free ańd is licensed under the MIT license, see the file [LICENSE](<https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt>) for details.
+The software is free and is licensed under the MIT license, see the file [LICENSE](<https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt>) for details.
 
 # Feedback/Issues
 
