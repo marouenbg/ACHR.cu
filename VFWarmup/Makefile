@@ -12,7 +12,7 @@ LIBFORMAT  = static_pic
 ifndef TRAVIS
 	#This is not the default path of CPLEX, please change it this variable if you have a different
 	#installation path
-	CPLEXDIR      = $(HOME)/CPLEX_Studio12.7.1/cplex
+	CPLEXDIR      = $(HOME)/cplex/cplex
 	#CPLEXDIR      = /work/projects/cplex/soft/cplex/12.6.3/cplex/
 	#CONCERTDIR    = ../../../../concert
 else
@@ -47,7 +47,13 @@ CPLEXLIBDIR   = $(CPLEXDIR)/lib/$(SYSTEM)/$(LIBFORMAT)
 CCLNDIRS  = -L$(CPLEXLIBDIR) -L$(CONCERTLIBDIR)
 CLNDIRS   = -L$(CPLEXLIBDIR)
 CCLNFLAGS = -lconcert -lilocplex -lcplex -lm -lpthread
-CLNFLAGS  = -lcplex -lm -lpthread -lrt
+CLNFLAGS  = -lcplex -lm -lpthread -ldl -lrt
+
+# GLPK settings (no OpenMP — GLPK is not thread-safe, use MPI only)
+GLPKDIR       ?= /usr
+CC_GLPK       = mpicc -O2 -std=c99 -D_POSIX_C_SOURCE=199309L
+GLPK_CFLAGS   = -I$(GLPKDIR)/include
+GLPK_LDFLAGS  = -L$(GLPKDIR)/lib
 
 
 
@@ -85,28 +91,41 @@ C_EX = createWarmupPts
 
 all_c: $(C_EX) $(CX_EX)
 
+# GLPK target (open-source, no CPLEX needed)
+glpk: createWarmupPtsGLPK
 
 clean :
 	/bin/rm -rf *.o *~ *.class
-	/bin/rm -rf $(C_EX) $(CX_EX) $(CPP_EX)
+	/bin/rm -rf $(C_EX) $(CX_EX) $(CPP_EX) createWarmupPtsGLPK
 	/bin/rm -rf *.mps *.ord *.sos *.lp *.sav *.net *.msg *.log *.clp
 
 # ------------------------------------------------------------
 #
-# The examples
+# CPLEX-based warmup point generation
 #
 
 createWarmupPts: createWarmupPts.o
 	$(CC) $(CFLAGS) $(CLNDIRS) -o createWarmupPts createWarmupPts.o $(CLNFLAGS)
 createWarmupPts.o: $(EXSRCC)/createWarmupPts.c
-	#$(CC) -c $(CFLAGS) /home/users/mbenguebila/veryfastFVA/veryfastFVA.c -o veryfastFVA.o -lrt
-	#$(CC) -c $(CFLAGS) /home/marouen.benguebila/P:/Projects/veryfastFVA/veryfastFVA.c -o veryfastFVA.o 
 	$(CC) -c $(CFLAGS) createWarmupPts.c -o createWarmupPts.o
 
+# ------------------------------------------------------------
+#
+# GLPK-based warmup point generation (open-source alternative)
+#
+
+createWarmupPtsGLPK: createWarmupPtsGLPK.o
+	$(CC_GLPK) -o createWarmupPtsGLPK createWarmupPtsGLPK.o $(GLPK_LDFLAGS) -lglpk -lm -lpthread -lrt
+createWarmupPtsGLPK.o: $(EXSRCC)/createWarmupPtsGLPK.c
+	$(CC_GLPK) $(GLPK_CFLAGS) -c createWarmupPtsGLPK.c -o createWarmupPtsGLPK.o
+
 test:
-	echo "Running test"
-	echo "1000\n" > data.text
-	mpirun -np 1 --bind-to none -x OMP_NUM_THREADS=2 createWarmupPts lib/P_putida.mps < data.text
+	echo "Running CPLEX test"
+	mpirun -np 1 --bind-to none -x OMP_NUM_THREADS=2 ./createWarmupPts lib/P_Putida.mps 5000
+
+test-glpk:
+	echo "Running GLPK test"
+	mpirun -np 1 --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 5000
 # Local Variables:
 # mode: makefile
 # End:

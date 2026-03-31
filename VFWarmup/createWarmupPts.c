@@ -8,8 +8,10 @@
  */
 /* createWarmupPts.c - A hybrid Open MP/MPI parallel optimization of fastFVA
    Usage
-      createWarmupPts <datafile>   
+      createWarmupPts <datafile> <nPts> [-1]
       <datafile> : .mps file containing LP problem
+      <nPts>     : number of warmup points to generate (must be > 2*nRxns)
+      -1         : optional, enable scaling
  */
 /*open mp declaration*/
 #include <omp.h>
@@ -50,18 +52,20 @@ void movePtsBds(CPXENVptr env,CPXLPptr lp, double *x, int n){
 			x[i] = ub[i];
 		}		
 	}
+	free(lb);
+	free(ub);
 }
 
 void createCenterPt(double **fluxMat, int nPts, int n, double *centPt){
 	/*Creates center point of warmup points*/
-	int sum=0;
+	double sum=0.0;
 	
 	for(int i=0;i<n;i++){
-		sum = 0;
+		sum = 0.0;
 		for(int j=0; j<nPts;j++){
 			sum += fluxMat[i][j]; 
 		}
-		centPt[i] = (double)sum/(nPts);
+		centPt[i] = sum / nPts;
 	}
 }
 
@@ -79,17 +83,27 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 	/* The actual Open MP FVA called with CPLEX env, CPLEX LP
 	the optimal LP solution and n the number of rows
 	*/
-	int status;
 	int cnt = 1;//number of bounds to be changed
-	double zero=0, one=1, mOne=-1;;//optimisation percentage
-	int i,j,k,curpreind,tid,nthreads, solstat;
-	int chunk = 50, ind, indices[n];
-	double *values;//obj function initial array
-	double objval, *x = NULL;
-	
+	double one=1, mOne=-1;
+	int nthreads;
+	int chunk = 50;
+
+	/* Shared read-only index array — initialized once before parallel region */
+	int *indices = (int*)malloc(n * sizeof(int));
+	for(int ki=0;ki<n;ki++){
+		indices[ki]=ki;
+	}
+
 	/*optimisation loop Max:j=-1 Min:j=+1*/
-	#pragma omp parallel private(tid,i,j,status,solstat)
+	#pragma omp parallel
 		{
+			/* Thread-private variables — each thread gets its own copies */
+			int status, solstat = 0;
+			int i, j, k, ind, curpreind, tid;
+			double objval;
+			double *values = NULL;
+			double *x = NULL;
+
 			int iters = 0;
 			double wTime = omp_get_wtime();
 			tid=omp_get_thread_num();
@@ -102,7 +116,6 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 			CPXENVptr     env = NULL;
 			CPXLPptr      lpi = NULL;
 			env = CPXopenCPLEX (&status);//open cplex instance for every thread
-			//status = CPXsetintparam (env, CPX_PARAM_PREIND, CPX_OFF);//deactivate presolving
 			lpi = CPXcloneprob(env,lp, &status);//clone problem for every thread
 			
 			/*set solver parameters*/
@@ -116,15 +129,10 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 				status = CPXgetintparam (env, CPX_PARAM_SCAIND, &curpreind);
 			}
 			
-			/*Initialize array of objective coefficients*/
-			for(k=0;k<n;k++){
-				indices[k]=k;
-			}
-			
-			/*Allocate array of zeros*/
+			/*Allocate thread-private array of zeros for objective coefficients*/
 			values =(double*)calloc(n, sizeof(double));
 			
-			/*Allocate solution arrary*/
+			/*Allocate thread-private solution array*/
 			x = (double *) malloc (n * sizeof(double));
 			
 			/*Set seed for every thread*/
@@ -142,10 +150,12 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 								status = CPXsolution (env, lpi, &solstat, &objval, x, NULL, NULL, NULL);
 							}else{
 								for(k=0;k<n;k++){
-									values[k]=rand()%1 - 0.5;
+								values[k]=(double)rand()/RAND_MAX - 0.5;
 								}//create random objective function
 								status = CPXchgobjsen (env, lpi, j);//change obj sense
 								status = CPXchgobj (env, lpi, n, indices, values);
+								/*Re-zero values for next FVA iteration*/
+								memset(values, 0, n * sizeof(double));
 								status = CPXlpopt (env, lpi);//solve LP
 								status = CPXsolution (env, lpi, &solstat, &objval, x, NULL, NULL, NULL);
 							}
@@ -156,22 +166,28 @@ void fva(CPXLPptr lp, int n, int scaling,double **fluxMat, int rank, int numproc
 						movePtsBds(env, lpi, x, n);
 						
 						//save results
-						if(j==-1){//save results
+						if(j==-1){
 							ind=2*i;
-							copyArrMat(x, fluxMat, ind, n);
 						}else{
 							ind=2*i+1;
-							copyArrMat(x, fluxMat, ind, n);
 						}
+						copyArrMat(x, fluxMat, ind, n);
 						
 						//reinit solstat
 						solstat=0;
 					}	
 				}	
 			
+			/*Free thread-private resources*/
+			free(values);
+			free(x);
+			CPXfreeprob(env, &lpi);
+			CPXcloseCPLEX(&env);
+
 			wTime = omp_get_wtime() - wTime;
 			printf("Thread %d/%d of process %d/%d did %d iterations in %f s\n",omp_get_thread_num(),omp_get_num_threads(),rank+1,numprocs,iters,wTime);
 		}
+	free(indices);
 }
 
 int main (int argc, char **argv){
@@ -202,16 +218,12 @@ int main (int argc, char **argv){
 	
 	/*Check arg number*/
 	if (rank==0){
-		if(( argc == 2 ) | ( argc == 3 )){
-			printf("\nThe model supplied is %s\n", argv[1]);
-			strcpy(modelName,argv[1]);
-		}else if( argc > 3 ) {
-			printf("Too many arguments supplied.\n");
-			goto TERMINATE;
-		}else {
-			printf("One argument expected.\n");
+		if(argc < 3 || argc > 4){
+			printf("Usage: %s <datafile.mps> <nPts> [-1]\n", argv[0]);
 			goto TERMINATE;
 		}
+		printf("\nThe model supplied is %s\n", argv[1]);
+		strcpy(modelName,argv[1]);
     }
 	
 	/* Initialize the CPLEX environment */
@@ -254,8 +266,8 @@ int main (int argc, char **argv){
 	status = CPXchgprobtype(env,lp,CPXPROB_LP);
 	
 	/*Scaling parameter if coupled model*/
-	if ( argc == 3 ) {
-		if (atoi(argv[2])==-1){
+	if ( argc == 4 ) {
+		if (atoi(argv[3])==-1){
 		/*Change of scaling parameter*/
 		scaling = 1;
 		status = CPXsetintparam (env, CPX_PARAM_SCAIND, mOne);//1034 is index scaling parameter
@@ -272,12 +284,17 @@ int main (int argc, char **argv){
 	n = CPXgetnumcols (env, lp);
 	
 	/*Ask for number of warmup points*/
+	nPts = atoi(argv[2]);
 	if(rank==0){
-		printf("How many warmup points should I generate? It should be larger than %d. \n", n*2);
-		scanf("%d", &nPts);
+		if(nPts < n*2){
+			printf("Warning: nPts=%d is less than 2*nRxns=%d, setting nPts=%d\n", nPts, n*2, n*2);
+			nPts = n*2;
+		}
 		/* Write the output to the screen. */
 		printf ("Creating %d warmup points! \n", nPts);
 	}
+	/*Broadcast nPts to all ranks*/
+	MPI_Bcast(&nPts, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 	/*Dynamically allocate result vector*/
 	globalfluxMat =(double**)calloc(n , sizeof(double*));//dimension of lines
@@ -298,7 +315,9 @@ int main (int argc, char **argv){
 
 	/*Reduce results*/
 	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Allreduce(fluxMat, globalfluxMat, n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	for(i=0;i<n;i++){
+		MPI_Allreduce(fluxMat[i], globalfluxMat[i], nPts, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	}
 
 	/*Create center point*/
 	createCenterPt(globalfluxMat, nPts, n, centPt);
@@ -324,8 +343,8 @@ int main (int argc, char **argv){
 	//strcat(modelName, fileName);
         modelName[strlen(modelName)-4] = '\0';//remove extension
 	sprintf(finalName,"%s%d%s",modelName,nPts,fileName);
-	fp=fopen(finalName,"w+");
 	if(rank==0){
+		fp=fopen(finalName,"w+");
 		for(i=0;i<n;i++){
 			for(j=0;j<nPts-1;j++){
 				fprintf(fp,"%f,",globalfluxMat[i][j]);
@@ -333,8 +352,8 @@ int main (int argc, char **argv){
 			fprintf(fp,"%f",globalfluxMat[i][nPts-1]);//print last value
 			fprintf(fp,"\n");
 		}
+		fclose(fp);
 	}
-	fclose(fp);
 	
 	/*Finalize*/
 	clock_gettime(CLOCK_REALTIME, &now);
@@ -366,6 +385,13 @@ TERMINATE:
 	free_and_null ((char **) &cost);
 	free_and_null ((char **) &lb);
 	free_and_null ((char **) &ub);
+	for(i=0;i<n;i++){
+		free(fluxMat[i]);
+		free(globalfluxMat[i]);
+	}
+	free(fluxMat);
+	free(globalfluxMat);
+	free(centPt);
 	return (status);
 }  /* END main */
 
