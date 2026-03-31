@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = u'ACHR.cu'
-copyright = u'2018, Marouen Ben Guebila'
+copyright = u'2018-2026, Marouen Ben Guebila'
 author = u'Marouen Ben Guebila'
 
 # The short X.Y version
-version = u''
+version = u'0.3'
 # The full version, including alpha/beta/rc tags
-release = u'0.1'
+release = u'0.3.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,18 +38,16 @@ release = u'0.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['releases']
+extensions = ['myst_parser']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-releases_github_path = "marouenbg/ACHR.cu"  # NOTE Change to "velocyto-team/velocyto.py" upon public release
-releases_unstable_prehistory = True
 
 # The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 # The master toctree document.
 master_doc = 'index'

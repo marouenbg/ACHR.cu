@@ -6,13 +6,16 @@
 Introduction
 ==================================
 ACHR.cu is a CUDA implementation of the sampling algorithm Artificially Centered Hit-and-Run (ACHR) for the analysis of metabolic models. Metabolic models are mathematical representations
-of biological organisms forumlated as linear programs. Popular metabolic modeling tools like Flux Balance Analysis (FBA) assume an objective function that the organism optimizes for. 
+of biological organisms formulated as linear programs. Popular metabolic modeling tools like Flux Balance Analysis (FBA) assume an objective function that the organism optimizes for. 
 When it is not obvious which objective function the system optimizes for, unbiased analysis like sampling is a tool of choice. Sampling is an MCMC method that explores the solution space or 
 the set of possible phenotypes under the linear constraints. 
 
 But as metabolic models of biological systems become more complex, the sampling of the solution space of a metabolic model becomes unfeasible due to the large analysis time. 
 In order to address the large analysis time for large metabolic models, I implemented a GP-GPU version of ACHR that reduces the sampling time by at least a factor of 10x for the sampling per se
 and a factor of 100x for the generation of warmup points which is the preprocessing step.
+
+The warmup point generator (VFWarmup) supports both **GLPK** (open-source) and **IBM CPLEX** (commercial) as LP solver backends.
+
 Here you can find tutorials on the installation and analysis of ACHR.cu sampling software.
 
 General approach and parallel construct

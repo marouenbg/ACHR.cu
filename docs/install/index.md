@@ -1,35 +1,60 @@
 # Installation guide
 
-Sampling of metabolic models is a two-step process. The first step is the generation of warmup points that will be used as a startign point
+Sampling of metabolic models is a two-step process. The first step is the generation of warmup points that will be used as a starting point
 for the actual sampling.
 
 ## Generation of warmup points
 
 To generate warmup points for metabolic models, we will use the `VFWarmup` tool that uses a hybrid MPI/OpenMP distributed approach to ensure dynamic load balancing.
 
+Two LP solver backends are supported: **GLPK** (open-source) and **IBM CPLEX** (commercial, free academic license).
+
 ### Requirements
+
 + Linux-based system
++ MPI through OpenMPI (1.10+ recommended)
++ **One of the following LP solvers:**
+  + [GLPK](https://www.gnu.org/software/glpk/) 4.65+ (open-source, no license required)
+  + [IBM CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) 12.6.3+ (free academic license available)
++ OpenMP comes by default in the latest gcc versions (CPLEX version only)
 
-+ IBM CPLEX 12.6.3 and above [Free academic version](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud)
+### Quick install (GLPK)
 
-+ OpenMp comes by default in the latest gcc versions
+```bash
+cd VFWarmup
 
-+ MPI through the OpenMPI 1.10.3 implementation.
+# Install GLPK (if not already available)
+# Ubuntu/Debian:
+sudo apt-get install libglpk-dev
+# Or build from source:
+# wget https://ftp.gnu.org/gnu/glpk/glpk-5.0.tar.gz
+# tar xzf glpk-5.0.tar.gz && cd glpk-5.0 && ./configure --prefix=$HOME/glpk && make -j4 && make install
 
-### Quick install
-
+# Build
+make glpk
 ```
+
+If GLPK is installed in a custom location, set `GLPKDIR`:
+
+```bash
+GLPKDIR=$HOME/glpk make glpk
+```
+
+### Quick install (CPLEX)
+
+```bash
 cd VFWarmup
 source ./install.sh
 make
 ```
+
+Quick install downloads and installs OpenMPI and IBM CPLEX for 64-bit machines.
+
 ### Troubleshooting
-Quick install downloads and installs 1) OpenMPI and 2) IBM CPLEX for 64-bit machines.
 
-You can do each step separately if quick install did not work or if you have different machine specs.
++ **MPI**: You can use the following code snippet to install MPI:
 
-+ MPI: You can use the following code snippet to install MPI
-```
+```bash
 VERSION=3.1.2
 wget --no-check-certificate https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-$VERSION.tar.gz
 tar -xzf openmpi-$VERSION.tar.gz
@@ -48,16 +73,50 @@ mkdir build && cd build
              --disable-mpi-fortran --disable-oshmem-fortran \
              --disable-libompitrace \
              --disable-mpi-io  --disable-io-romio \
-             --disable-static #--enable-mpi-thread-multiple
+             --disable-static
 make -j2
 make install
-```
-You might also need to add MPI path
-
-```
 export PATH=$HOME/open-mpi/bin:$PATH
 ```
-+ IBM CPLEX: The recommended approach is to download [IBM CPLEX](http://www-03.ibm.com/software/products/fr/ibmilogcpleoptistud) and register for the free academic version.
+
++ **IBM CPLEX**: Download [IBM CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) and register for the free academic version. Update the `CPLEXDIR` variable in the Makefile to point to your CPLEX installation.
+
++ **GLPK from source**: If your system doesn't have GLPK packages available, build from source and set `GLPKDIR` to the install prefix.
+
+## Sampling
+
+The GPU sampling uses CUDA to parallelize the ACHR algorithm.
+
+### Requirements
+
++ Linux-based system
++ NVIDIA GPU with compute capability >= 3.7 (e.g., Tesla K80, V100, A100)
++ CUDA Toolkit >= 10.0
++ [GSL](https://www.gnu.org/software/gsl/) (GNU Scientific Library)
++ [IBM CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio) 12.6.3+
+
+### Quick install
+
+```bash
+cd ACHRcu
+make
+```
+
+Update the `CPLEXDIR` and `GSLDIR` variables in the Makefile if libraries are installed in non-standard locations.
+
+### Troubleshooting
+
++ **CUDA architecture**: The Makefile targets `sm_37` (Tesla K80). For newer GPUs, update the `-arch` flag in the Makefile (e.g., `sm_70` for V100, `sm_80` for A100).
+
++ **GCC version**: CUDA toolkits have GCC version limits. CUDA 11.x supports GCC up to 10, CUDA 12.x supports GCC up to 12.
+
++ **GSL from source**: If `libgsl-dev` is not available:
+
+```bash
+wget https://ftp.gnu.org/gnu/gsl/gsl-2.7.tar.gz
+tar xzf gsl-2.7.tar.gz && cd gsl-2.7
+./configure --prefix=$HOME/gsl && make -j4 && make install
+```
 
 Make sure that the CPLEXDIR path in `VFWarmup/Makefile` corresponds to the installation folder of CPLEX.
 
