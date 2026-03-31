@@ -30,31 +30,32 @@ jobs:
         working-directory: VFWarmup
         run: make glpk GLPKDIR=/usr
 
-      - name: Test VFWarmup (GLPK) — 1000 warmup points
+      - name: Test VFWarmup (GLPK) — 2120 warmup points
         working-directory: VFWarmup
         run: |
-          mpirun -np 1 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 1000
+          # P. putida has 1060 rxns, minimum warmup = 2*1060 = 2120
+          mpirun -np 1 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 2120
 
       - name: Validate output
         working-directory: VFWarmup
         run: |
           # Check that CSV was generated with expected dimensions
-          test -f P_Putida1000warmup.csv
-          NROWS=$(wc -l < P_Putida1000warmup.csv)
-          NCOLS=$(head -1 P_Putida1000warmup.csv | tr ',' '\n' | wc -l)
+          test -f P_Putida2120warmup.csv
+          NROWS=$(wc -l < P_Putida2120warmup.csv)
+          NCOLS=$(head -1 P_Putida2120warmup.csv | tr ',' '\n' | wc -l)
           echo "Output: ${NROWS} rows x ${NCOLS} columns"
           # P. putida has 1060 reactions
           test "$NROWS" -eq 1060
-          # Should have 1000 warmup points
-          test "$NCOLS" -eq 1000
+          # Should have 2120 warmup points (2 * nRxns)
+          test "$NCOLS" -eq 2120
           echo "Validation passed"
 
       - name: Test MPI parallel (2 ranks)
         working-directory: VFWarmup
         run: |
-          rm -f P_Putida1000warmup.csv
-          mpirun -np 2 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 1000
-          test -f P_Putida1000warmup.csv
-          NROWS=$(wc -l < P_Putida1000warmup.csv)
+          rm -f P_Putida2120warmup.csv
+          mpirun -np 2 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 2120
+          test -f P_Putida2120warmup.csv
+          NROWS=$(wc -l < P_Putida2120warmup.csv)
           test "$NROWS" -eq 1060
           echo "MPI parallel test passed"
