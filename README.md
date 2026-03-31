@@ -1,7 +1,6 @@
 [![DOI](http://joss.theoj.org/papers/10.21105/joss.01363/status.svg)](https://doi.org/10.21105/joss.01363)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3233085.svg)](https://doi.org/10.5281/zenodo.3233085)
-[![TRAVIS](https://travis-ci.com/marouenbg/ACHR.cu.svg?branch=master)](https://travis-ci.com/marouenbg/ACHR.cu)
-[![codecov](https://codecov.io/gh/marouenbg/ACHR.cu/branch/master/graph/badge.svg)](https://codecov.io/gh/marouenbg/ACHR.cu)
+[![CI](https://github.com/marouenbg/ACHR.cu/actions/workflows/vfwarmup.yml/badge.svg)](https://github.com/marouenbg/ACHR.cu/actions/workflows/vfwarmup.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/marouenbg/ACHR.cu/blob/master/LICENSE.txt)
 
 # Description
@@ -20,22 +19,29 @@ Technically sampling is a two step process:
 2. The actual sampling starting from the previously generated warmup points.
 
 # Installation
-The software can be installed via cloning this repository to your local machine and compiling `VFWarmup` (for step 1) and `ACHR.cu` (for step 2) at their root folders.
+The software can be installed via cloning this repository to your local machine and compiling `VFWarmup` (for step 1) and `ACHRcu` (for step 2) at their root folders.
 More details can be found in the [documentation](https://achrcu.readthedocs.io/en/latest/).
 
 ## Dependencies 
 
-+ IBM CPLEX v12.6 (free for academics)
+### VFWarmup (warmup point generation)
 
-+ GSL linear algebra library
++ **LP solver** — one of:
+  + [GLPK](https://www.gnu.org/software/glpk/) (open-source, recommended)
+  + IBM CPLEX (free for academics)
++ MPI (OpenMPI or MPICH)
++ OpenMP (CPLEX version only — GLPK is not thread-safe)
 
-+ CUDA v8.0
+### ACHRcu (GPU sampling)
 
-+ MPI and OpenMP
++ CUDA >= 10.0
++ GSL (GNU Scientific Library)
++ IBM CPLEX
 
-## Harwarde requirements
+## Hardware requirements
 
-+ Nvidia GPU with sm_35 architecture and above. Check the [documentation](https://achrcu.readthedocs.io/en/latest/) for more details on the requirements.
++ NVIDIA GPU with sm_37 architecture (Kepler K80) or above
++ Check the [documentation](https://achrcu.readthedocs.io/en/latest/) for more details on the requirements.
 
 # Reproducibility
 
@@ -47,29 +53,46 @@ dependencies cached.
 
 Sampling is a two-step process:
 
-1. The generation of warmup points.
+## 1. Generation of warmup points
 
-Quick installation
+### Using GLPK (open-source)
+
+```
+cd VFWarmup
+make glpk
+```
+
+Test your installation:
+```
+make test_glpk
+```
+
+Generate warmup points with MPI parallelism:
+```
+mpirun -np nCores ./createWarmupPtsGLPK model.mps nWarmupPoints
+```
+
+### Using CPLEX
+
 ```
 cd VFWarmup
 source ./install.sh
 make
 ```
+
 Make sure to run source on the install script because it exports environment variables. Then test your installation:
 ```
 make test
 ```
 
-Then you can run the generation of warmup points
+Generate warmup points with hybrid MPI/OpenMP:
 ```
-mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads createWarmupPts model.mps
+mpirun -np nCores --bind-to none -x OMP_NUM_THREADS=nThreads ./createWarmupPts model.mps nWarmupPoints
 ```
 
-This command allows to generate warmup points given by the user in runtime of the model in `model.mps` file using dynamically load balanced `nCores` and `nThreads` through a hybrid MPI/OpenMP.
+## 2. GPU sampling
 
-2. The actual sampling starting from the previously generated warmup points.
-
-Quick install first.
+Quick install:
 ```
 cd ACHRcu
 source ./install.sh
@@ -80,14 +103,14 @@ Also here, make sure to run source on the install script because it exports envi
 make test
 ```
 
-Then you can perform the sampling.
+Then you can perform the sampling:
 
 ```
 ./ACHRCuda model.mps warmuppoints.csv nFiles nPoints nSteps
 ```
 
-This command allows to generate the actual sampling points starting from the previously generated sampling points stored in `warmuppoints.csv` to generate a total of `nFiles*nPoints` with each point
-requiring `nSteps` to converge. 
+This command generates the actual sampling points starting from the previously generated warmup points stored in `warmuppoints.csv` to produce a total of `nFiles*nPoints` with each point
+requiring `nSteps` to converge.
 
 # Acknowledgments
 
