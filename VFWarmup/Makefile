@@ -114,8 +114,15 @@ createWarmupPts.o: $(EXSRCC)/createWarmupPts.c
 # GLPK-based warmup point generation (open-source alternative)
 #
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+  GLPK_EXTRA_LIBS = -lrt
+else
+  GLPK_EXTRA_LIBS =
+endif
+
 createWarmupPtsGLPK: createWarmupPtsGLPK.o
-	$(CC_GLPK) -o createWarmupPtsGLPK createWarmupPtsGLPK.o $(GLPK_LDFLAGS) -lglpk -lm -lpthread -lrt
+	$(CC_GLPK) -o createWarmupPtsGLPK createWarmupPtsGLPK.o $(GLPK_LDFLAGS) -lglpk -lm -lpthread $(GLPK_EXTRA_LIBS)
 createWarmupPtsGLPK.o: $(EXSRCC)/createWarmupPtsGLPK.c
 	$(CC_GLPK) $(GLPK_CFLAGS) -c createWarmupPtsGLPK.c -o createWarmupPtsGLPK.o
 

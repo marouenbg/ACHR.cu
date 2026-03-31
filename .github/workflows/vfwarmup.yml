@@ -1,0 +1,60 @@
+name: VFWarmup CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'VFWarmup/**'
+      - '.github/workflows/vfwarmup.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'VFWarmup/**'
+      - '.github/workflows/vfwarmup.yml'
+
+jobs:
+  build-glpk:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mpi: [openmpi]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglpk-dev libopenmpi-dev openmpi-bin
+
+      - name: Build VFWarmup (GLPK)
+        working-directory: VFWarmup
+        run: make glpk GLPKDIR=/usr
+
+      - name: Test VFWarmup (GLPK) — 1000 warmup points
+        working-directory: VFWarmup
+        run: |
+          mpirun -np 1 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 1000
+
+      - name: Validate output
+        working-directory: VFWarmup
+        run: |
+          # Check that CSV was generated with expected dimensions
+          test -f P_Putida1000warmup.csv
+          NROWS=$(wc -l < P_Putida1000warmup.csv)
+          NCOLS=$(head -1 P_Putida1000warmup.csv | tr ',' '\n' | wc -l)
+          echo "Output: ${NROWS} rows x ${NCOLS} columns"
+          # P. putida has 1060 reactions
+          test "$NROWS" -eq 1060
+          # Should have 1000 warmup points
+          test "$NCOLS" -eq 1000
+          echo "Validation passed"
+
+      - name: Test MPI parallel (2 ranks)
+        working-directory: VFWarmup
+        run: |
+          rm -f P_Putida1000warmup.csv
+          mpirun -np 2 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 1000
+          test -f P_Putida1000warmup.csv
+          NROWS=$(wc -l < P_Putida1000warmup.csv)
+          test "$NROWS" -eq 1060
+          echo "MPI parallel test passed"
