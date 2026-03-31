@@ -39,10 +39,10 @@ jobs:
       - name: Validate output
         working-directory: VFWarmup
         run: |
-          # Check that CSV was generated with expected dimensions
-          test -f P_Putida2120warmup.csv
-          NROWS=$(wc -l < P_Putida2120warmup.csv)
-          NCOLS=$(head -1 P_Putida2120warmup.csv | tr ',' '\n' | wc -l)
+          # Output file is in lib/ because modelName includes path prefix
+          test -f lib/P_Putida2120warmup.csv
+          NROWS=$(wc -l < lib/P_Putida2120warmup.csv)
+          NCOLS=$(head -1 lib/P_Putida2120warmup.csv | tr ',' '\n' | wc -l)
           echo "Output: ${NROWS} rows x ${NCOLS} columns"
           # P. putida has 1060 reactions
           test "$NROWS" -eq 1060
@@ -53,9 +53,9 @@ jobs:
       - name: Test MPI parallel (2 ranks)
         working-directory: VFWarmup
         run: |
-          rm -f P_Putida2120warmup.csv
+          rm -f lib/P_Putida2120warmup.csv
           mpirun -np 2 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 2120
-          test -f P_Putida2120warmup.csv
-          NROWS=$(wc -l < P_Putida2120warmup.csv)
+          test -f lib/P_Putida2120warmup.csv
+          NROWS=$(wc -l < lib/P_Putida2120warmup.csv)
           test "$NROWS" -eq 1060
           echo "MPI parallel test passed"
