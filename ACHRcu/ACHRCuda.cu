@@ -24,7 +24,6 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
-#include <math_functions.h>
 //GSL
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
@@ -114,7 +113,6 @@ void computeKernelQRCuda(int nRxns, int nMets, double *d_Slin, cublasHandle_t ha
 	//free the memory
 	cudaFree(d_TAU);
 	cudaFree(d_Slin_copy);
-	cudaFree(d_Slin);
 	cusolverDnDestroy(solver_handle);
 }
 
@@ -171,7 +169,6 @@ void computeKernelSeq(double *S,int nRxns,int nMets, double *h_N, int *istart){
 	printf("sv_%d = %g\n",*istart,gsl_vector_get(sv,*istart));
 
 	//printf("Kernel dim are %d %d\n",nRxns,nRxns-*istart);
-	h_N = (double*)realloc(h_N,nRxns*(nRxns-(*istart))*sizeof(double));//Realloc h_N
 	int k=0;
 	for(int j=*istart;j<nRxns;j++){
 		for(int i=0;i<nRxns;i++){
@@ -231,7 +228,7 @@ __global__ void findMaxAbs(int nRxns, double *d_umat2, int nMets, int *d_rowVec,
 	int stride = blockDim.x * gridDim.x;
 	
 	for(int k=newindex;k<nnz;k+=stride){
-		d_umat2[nMets*index+d_rowVec[k]]+=d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]];
+		atomicAdd(&d_umat2[nMets*index+d_rowVec[k]], d_val[k]*points[pointCount+pointsPerFile*d_colVec[k]]);
 	}
 	
 }
@@ -303,7 +300,8 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	int numBlocks2=(nRxns + blockSize2 - 1)/blockSize2;
 
 	while(stepCount < stepsPerPoint){
-		randPointId = ceil(nWrmup*(double)curand_uniform(&state));
+		randPointId = (int)(nWrmup*(double)curand_uniform(&state));
+		if(randPointId >= nWrmup) randPointId = nWrmup - 1;
 		//printf("randPoint id is %d \n",randPointId);
 		//randPointId = 9;
 		fillrandPoint(d_fluxMat, randPointId, nRxns, nWrmup, d_centerPointTmp, d_umat, d_distUb, d_distLb, d_ub, d_lb, d_prevPoint, d_pos, dTol, uTol, d_pos_max, d_pos_min, d_maxStepVec, d_minStepVec, d_min_ptr, d_max_ptr, index);
@@ -356,7 +354,7 @@ __global__ void stepPointProgress(int pointsPerFile, double *points, int stepsPe
 
 	if(index < pointsPerFile){
 		int stepCount, totalStepCount;
-		double d_randVector[1000];
+		double d_randVector[NLOCALMEM];
 
 		curandState_t state;
 		curand_init(clock64(),threadIdx.x,0,&state);
@@ -473,7 +471,6 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 		}
 	}
 	int k=0;
-	h_N = (double*)realloc(h_N,nRxns*(nRxns-(*istart))*sizeof(double));
 
 	for(int j=(*istart)*nRxns;j<nRxns*nRxns;j++){
 		h_N[k]=h_V[j];
@@ -481,7 +478,6 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 	}
 
 	//free the memory
-	cudaFree(d_Slin); //keep d_Slin in memory
 	cudaFree(d_Slin_copy);
 	cudaFree(d_SlinTS);
 	cudaFree(d_V);
@@ -620,7 +616,7 @@ int main(int argc, char **argv){
 	nWrmup = computenWrmup(argv[2],buffer);
 	printf("nWrmup egale a %d \n",nWrmup);
         stream = fopen(argv[2],"r");
-	h_fluxMat= (double*)calloc(nWrmup*nRxns, sizeof(double*));//should be init to nRxns
+	h_fluxMat= (double*)calloc(nWrmup*nRxns, sizeof(double));
 
 	//Read all points, matrix is in column-major format
 	char str[buffer];
@@ -685,10 +681,8 @@ int main(int argc, char **argv){
 		stepPointProgress<<<numBlocks,blockSize>>>(pointsPerFile,points,stepsPerPoint,nRxns,nWrmup,d_fluxMat,d_ub,d_lb,dTol,uTol,maxMinTol,nMets,d_N,istart,d_centerPoint,d_rowVec, d_colVec, d_val, nnz, d_umat, d_umat2,d_distUb,d_distLb,d_maxStepVec,d_minStepVec,d_prevPoint,d_centerPointTmp);
 		cudaDeviceSynchronize();
 		gpuErrchk(cudaMemcpy(h_points,points,nRxns*pointsPerFile*sizeof(double),cudaMemcpyDeviceToHost));
-		filename[0]='\0';//Init file name
-		char dest[]="File";
-		sprintf(filename,"%d",ii);
-		strcat(dest,filename);
+		char dest[256];
+		sprintf(dest,"File%d",ii);
 		//strcat(dest,".csv"); keep this one commented
 		FILE * f =fopen(dest,"wb");
 		int j=0;
@@ -731,15 +725,17 @@ int main(int argc, char **argv){
 	cudaFree(points);
 	cudaFree(d_umat);
 	cudaFree(d_umat2);
-	//cudaFree(d_Slin_row);
 	cudaFree(d_fluxMat);
 	cudaFree(d_N);
-	//cudaFree(d_Slin);
 	cudaFree(d_colVec);
 	cudaFree(d_rowVec);
 	cudaFree(d_minStepVec);
 	cudaFree(d_maxStepVec);
 	cudaFree(d_val);
+	cudaFree(d_distUb);
+	cudaFree(d_distLb);
+	cudaFree(d_prevPoint);
+	cudaFree(d_centerPointTmp);
 	return 0;
 }//main
 

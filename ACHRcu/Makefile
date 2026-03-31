@@ -9,9 +9,9 @@ LIBFORMAT  = static_pic
 #
 #------------------------------------------------------------
 
-GSLDIR        = /usr/include/gsl
+GSLDIR        = $(HOME)/gsl/include
 #Please check the CPLEX directory, the default installation directory is commented below
-CPLEXDIR      =  $(HOME)/CPLEX_Studio12.7.1/cplex
+CPLEXDIR      =  $(HOME)/cplex/cplex
 #CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 
 # ---------------------------------------------------------------------
@@ -19,7 +19,7 @@ CPLEXDIR      =  $(HOME)/CPLEX_Studio12.7.1/cplex
 # ---------------------------------------------------------------------
 
 
-CC  = nvcc -Xptxas="-v" -arch=sm_35 -lineinfo --use_fast_math -rdc=true
+CC  = /usr/local/cuda-11.3/bin/nvcc -Xptxas="-v" -arch=sm_37 -lineinfo --use_fast_math -rdc=true
 #CC  = gcc -O0
 
 
@@ -56,7 +56,7 @@ all:
 
 CPLEXINCDIR   = $(CPLEXDIR)/include
 INCLUDES      = $(GSLDIR)$(EIGENDIR)
-GSL_LIBS      = -L/usr/lib
+GSL_LIBS      = -L$(HOME)/gsl/lib
 EXDIR         = $(CPLEXDIR)/examples
 EXINC         = $(EXDIR)/include
 EXDATA        = $(EXDIR)/data
@@ -102,4 +102,4 @@ ACHRCuda.o: $(EXSRCC)/ACHRCuda.cu
 
 test:
 	echo "Running test"
-	./ACHRCuda ../VFWarmup/lib/P_putida.mps ../VFWarmup/P_putida1000warmup.csv 1 100 100
+	./ACHRCuda ../VFWarmup/lib/P_Putida.mps ../VFWarmup/lib/P_Putida1000warmup.csv 1 100 100
