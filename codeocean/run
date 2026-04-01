@@ -1,48 +1,36 @@
 #!/usr/bin/env bash
 set -e
 
-# ACHR.cu — GPU-accelerated sampling of metabolic networks
-# Step 1: Build code
-# Step 2: Generate warmup points (GLPK + MPI)
-# Step 3: Sample using GPU (CUDA)
+# ACHR.cu — Generate warmup points for metabolic network sampling
+# Uses GLPK (open-source LP solver) + MPI
 
 # Parameters
 N_WARMUP=2120
-N_FILES=2
-N_POINTS=100
-N_STEPS=100
 
-# Build VFWarmup
+# Build VFWarmup with GLPK
 cd /code/VFWarmup
 make clean || true
 GLPKDIR=/usr make glpk
-
-# Build ACHRCuda
-cd /code/ACHRcu
-make clean || true
-GSLDIR=/usr GLPKDIR=/usr make glpk
 
 # Code Ocean /data/ is read-only; copy MPS to writable /tmp/
 MODEL_SRC=/data/models/P_Putida.mps
 MODEL=/tmp/P_Putida.mps
 cp "$MODEL_SRC" "$MODEL"
 
-echo "=== Step 1: Generating warmup points ==="
-cd /code/VFWarmup
+echo "=== Generating warmup points ==="
 mpirun --allow-run-as-root -np 1 --bind-to none ./createWarmupPtsGLPK "$MODEL" $N_WARMUP
 
 # Warmup CSV is written next to the MPS file: /tmp/P_Putida<nPts>warmup.csv
 WARMUP_CSV=$(ls -t /tmp/*warmup.csv 2>/dev/null | head -1)
 echo "Warmup CSV: $WARMUP_CSV"
+
+# Validate output
+NROWS=$(wc -l < "$WARMUP_CSV")
+NCOLS=$(head -1 "$WARMUP_CSV" | tr ',' '\n' | wc -l)
+echo "Output: ${NROWS} reactions x ${NCOLS} warmup points"
+
+# Copy to results
 cp "$WARMUP_CSV" /results/
-
-echo ""
-echo "=== Step 2: GPU sampling ==="
-cd /code/ACHRcu
-./ACHRCuda "$MODEL" "$WARMUP_CSV" $N_FILES $N_POINTS $N_STEPS
-
-# Copy sampling results to output
-cp File* /results/ 2>/dev/null || true
 echo ""
 echo "=== Results ==="
 ls -la /results/
