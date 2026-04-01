@@ -2,14 +2,25 @@
 set -e
 
 # ACHR.cu — GPU-accelerated sampling of metabolic networks
-# Step 1: Generate warmup points (GLPK + MPI)
-# Step 2: Sample using GPU (CUDA)
+# Step 1: Build code
+# Step 2: Generate warmup points (GLPK + MPI)
+# Step 3: Sample using GPU (CUDA)
 
 # Parameters
 N_WARMUP=2120
 N_FILES=2
 N_POINTS=100
 N_STEPS=100
+
+# Build VFWarmup
+cd /code/VFWarmup
+make clean || true
+GLPKDIR=/usr make glpk
+
+# Build ACHRCuda
+cd /code/ACHRcu
+make clean || true
+GSLDIR=/usr GLPKDIR=/usr make glpk
 
 # Code Ocean /data/ is read-only; copy MPS to writable /tmp/
 MODEL_SRC=/data/models/P_Putida.mps
