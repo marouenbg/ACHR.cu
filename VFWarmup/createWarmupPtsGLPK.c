@@ -260,6 +260,26 @@ int main(int argc, char **argv){
 		MPI_Allreduce(fluxMat[i], globalfluxMat[i], nPts, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 	}
 
+	/* Output raw FVA bounds (before normalization) for validation */
+	if(rank == 0){
+		char fvaName[300];
+		char tmpModel[100];
+		strcpy(tmpModel, modelName);
+		tmpModel[strlen(tmpModel)-4] = '\0';
+		sprintf(fvaName, "%s_fva_bounds.csv", tmpModel);
+		FILE *fva_fp = fopen(fvaName, "w+");
+		fprintf(fva_fp, "reaction,min,max\n");
+		for(i = 0; i < n; i++){
+			char *rname = (char*)glp_get_col_name(lp, i+1);
+			fprintf(fva_fp, "%s,%f,%f\n",
+				rname ? rname : "?",
+				globalfluxMat[i][2*i],
+				globalfluxMat[i][2*i+1]);
+		}
+		fclose(fva_fp);
+		printf("Raw FVA bounds written to %s\n", fvaName);
+	}
+
 	createCenterPt(globalfluxMat, nPts, n, centPt);
 	movePtsCet(globalfluxMat, nPts, n, centPt);
 
