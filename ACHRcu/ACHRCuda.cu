@@ -299,7 +299,7 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 	int randPointId;
 	double d_pos, d_pos_max, d_pos_min;
 	double d_min_ptr[1], d_max_ptr[1];
-	double d_stepDist, alpha, beta, dev_max[1];
+	double d_stepDist, alpha, beta;
 	int blockSize=128, blockSize1=16, blockSize2=16;// 64 32 32
 	int numBlocks=(nnz + blockSize-1)/blockSize;
 	int numBlocks1=(nRxns-istart + blockSize1 - 1)/blockSize1;
@@ -320,31 +320,36 @@ __device__ void createPoint(double *points, int stepCount, int stepsPerPoint, in
 
 		//cudaDeviceSynchronize();
 		advNextStep<<<numBlocks2,blockSize2>>>(d_prevPoint, d_umat, d_stepDist, nRxns, points, pointsPerFile, pointCount,index);
-		//cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
 
 		if(totalStepCount % 10 == 0){
 			for(int k=0;k<nMets;k++){
-                		d_umat2[index*nMets+k]=0;//d_umat is d_result
+                		d_umat2[index*nMets+k]=0;
         		}
-			//cudaDeviceSynchronize();
+			cudaDeviceSynchronize();
 			findMaxAbs<<<numBlocks,blockSize>>>(nRxns, d_umat2, nMets, d_rowVec, d_colVec, d_val, nnz, points, pointsPerFile, pointCount, index);
-			//cudaDeviceSynchronize();
-		        double *dev_max_ptr = thrust::max_element(thrust::seq,d_umat2 + (nMets*index), d_umat2 + (nMets*(index+1)));
-		        dev_max[0] = *dev_max_ptr;
-			if(*dev_max > 1e-9){
-				cudaDeviceSynchronize();
-				reprojectPoint<<<numBlocks1,blockSize1>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);//possibly do in memory the triple mat multiplication
+			cudaDeviceSynchronize();
+			//find max absolute value of Sv residuals
+			double maxAbsSv = 0.0;
+			for(int k=0;k<nMets;k++){
+				double val = fabs(d_umat2[index*nMets+k]);
+				if(val > maxAbsSv) maxAbsSv = val;
+			}
+			if(maxAbsSv > 1e-9){
+				reprojectPoint<<<numBlocks1,blockSize1>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
 				cudaDeviceSynchronize();
 				reprojectPoint2<<<numBlocks2,blockSize2>>>(d_N,nRxns,istart,d_umat,points,pointsPerFile,pointCount,index);
 				cudaDeviceSynchronize();
 			}
 		}
- 		alpha=(double)(nWrmup+totalStepCount+1)/(nWrmup+totalStepCount+1+1);
-		beta=1.0/(nWrmup+totalStepCount+1+1);
-	
-		cudaDeviceSynchronize();
+
+		// Clip to bounds, update prevPoint and centerPoint (matches MATLAB ordering)
+ 		alpha=(double)(nWrmup+totalStepCount)/(nWrmup+totalStepCount+1);
+		beta=1.0/(nWrmup+totalStepCount+1);
+
 		correctBounds<<<numBlocks2,blockSize2>>>(d_ub, d_lb, nRxns, d_prevPoint, alpha, beta, d_centerPointTmp,points,pointsPerFile,pointCount,index);
-		//cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
+
 		stepCount++;
 		totalStepCount++;
 	}
