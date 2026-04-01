@@ -4,7 +4,13 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#ifdef USE_GLPK
+extern "C" {
+#include <glpk.h>
+}
+#else
 #include <ilcplex/cplex.h>
+#endif
 //CUDA
 #include <cusolverDn.h>
 #include <cuda_runtime_api.h>
@@ -493,7 +499,6 @@ void computeKernelCuda(double *h_Slin,int nRxns,int nMets, int *istart,double *h
 int main(int argc, char **argv){
 	double maxMinTol = 1e-9;
 	double *h_fluxMat, *h_centerPoint, *d_centerPoint;
-	double *cmatval;
 	double *h_ub, *h_lb, *d_ub, *d_lb;
 	double uTol = 1e-9, *points, *h_points, *d_umat, *d_umat2;
 	double *h_Slin, *d_Slin,*h_N, *d_N, *d_fluxMat, *d_distUb, *d_distLb;
@@ -504,14 +509,20 @@ int main(int argc, char **argv){
 	struct timespec now, tmstart;
 	FILE* stream;
 	char *pt;
+#ifdef USE_GLPK
+	glp_prob *mps = NULL;
+#else
 	CPXENVptr env=NULL;
 	CPXLPptr lp=NULL;
+	double *cmatval;
+	int nzcnt,surplus,surplusbis;
+	int *cmatbeg, *cmatind;
+#endif
 	int status, istart=0, row=0;
 	int *h_rowVec, *h_colVec, *d_rowVec, *d_colVec;
 	int nWrmup=0;
 	int nRxns=0,nMets=0, nFiles, pointsPerFile, stepsPerPoint;
-	int nzcnt,surplus,surplusbis;
-	int *cmatbeg, *cmatind, totalCount;	
+	int totalCount;	
 	int buffer = 8196*128;
 	int nDevices, nnz;
 	char filename[8196];
@@ -540,8 +551,47 @@ int main(int argc, char **argv){
 	printf("Total count is %d \n",totalCount); 
 
 	//Read the model
-	env = CPXopenCPLEX(&status);
 	printf("\nThe model supplied is %s\n", argv[1]);
+#ifdef USE_GLPK
+	glp_term_out(GLP_OFF);
+	mps = glp_create_prob();
+	if (glp_read_mps(mps, GLP_MPS_DECK, NULL, argv[1]) != 0) {
+		printf("Error reading MPS file %s\n", argv[1]);
+		return 1;
+	}
+	nMets = glp_get_num_rows(mps);
+	nRxns = glp_get_num_cols(mps);
+	printf("nRxns egale a %d  \n",nRxns);
+	printf("nMets egale a %d  \n",nMets);
+	h_ub=(double*)calloc(nRxns, sizeof(double));
+	gpuErrchk(cudaMalloc(&d_ub, nRxns*sizeof(double)));
+	h_lb=(double*)calloc(nRxns, sizeof(double));
+	gpuErrchk(cudaMalloc(&d_lb, nRxns*sizeof(double)));
+	for (int j = 0; j < nRxns; j++) {
+		h_ub[j] = glp_get_col_ub(mps, j+1);
+		h_lb[j] = glp_get_col_lb(mps, j+1);
+	}
+	//Initialize S
+	h_Slin=(double*)calloc(nMets*nRxns, sizeof(double));
+	gpuErrchk(cudaMalloc(&d_Slin, nRxns*nMets*sizeof(double)));
+	//populate the S matrix using glp_get_mat_col (1-indexed)
+	nnz=0;
+	{
+		int *ind = (int*)malloc((nMets+1)*sizeof(int));
+		double *val = (double*)malloc((nMets+1)*sizeof(double));
+		for (int j = 0; j < nRxns; j++) {
+			int len = glp_get_mat_col(mps, j+1, ind, val);
+			for (int k = 1; k <= len; k++) {
+				h_Slin[j*nMets + (ind[k]-1)] = val[k];
+				nnz++;
+			}
+		}
+		free(ind);
+		free(val);
+	}
+	printf("nnz is %d \n",nnz);
+#else
+	env = CPXopenCPLEX(&status);
 	lp = CPXcreateprob(env, &status, "Problem");
 	CPXreadcopyprob(env, lp, argv[1], NULL);
 	CPXchgprobtype(env,lp,CPXPROB_LP);
@@ -583,6 +633,7 @@ int main(int argc, char **argv){
 		}
 	}
 	printf("nnz is %d \n",nnz);
+#endif
 	//Transform into sparse format (CSR format)
 	h_rowVec=(int*)calloc(nnz, sizeof(int));
 	h_colVec=(int*)calloc(nnz, sizeof(int));
@@ -609,8 +660,12 @@ int main(int argc, char **argv){
 	//Transfer ub and lb and Slin
 	gpuErrchk(cudaMemcpy(d_ub,h_ub,nRxns*sizeof(double),cudaMemcpyHostToDevice));	
 	gpuErrchk(cudaMemcpy(d_lb,h_lb,nRxns*sizeof(double),cudaMemcpyHostToDevice));
+#ifdef USE_GLPK
+	glp_delete_prob(mps);
+#else
 	CPXfreeprob(env,&lp);
 	CPXcloseCPLEX(&env);
+#endif
 
 	//Read number of warmup points
 	nWrmup = computenWrmup(argv[2],buffer);
@@ -707,7 +762,9 @@ int main(int argc, char **argv){
 	//Free memory
 	free(h_fluxMat);
 	free(h_centerPoint);
+#ifndef USE_GLPK
 	free(cmatval);
+#endif
 	free(h_ub);
 	free(h_lb);
 	free(h_points);

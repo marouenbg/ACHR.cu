@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+# Install system dependencies
+apt-get update -qq
+apt-get install -y -qq libgsl-dev libglpk-dev openmpi-bin libopenmpi-dev > /dev/null
+
+# Build VFWarmup (GLPK — open source, no CPLEX license needed)
+cd /code/VFWarmup
+make clean || true
+GLPKDIR=/usr make glpk
+
+# Build ACHRCuda (GLPK for MPS reading, CUDA for GPU sampling)
+cd /code/ACHRcu
+make clean || true
+GSLDIR=/usr GLPKDIR=/usr make glpk

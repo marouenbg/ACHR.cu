@@ -9,18 +9,22 @@ LIBFORMAT  = static_pic
 #
 #------------------------------------------------------------
 
-GSLDIR        = $(HOME)/gsl/include
+GSLDIR        ?= /usr
+GLPKDIR       ?= /usr
+
 #Please check the CPLEX directory, the default installation directory is commented below
 CPLEXDIR      =  $(HOME)/cplex/cplex
 #CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio1271/cplex
 
 # ---------------------------------------------------------------------
-# Compiler selection 
+# Compiler selection (auto-detect CUDA path)
 # ---------------------------------------------------------------------
 
-
-CC  = /usr/local/cuda-11.3/bin/nvcc -Xptxas="-v" -arch=sm_37 -lineinfo --use_fast_math -rdc=true
-#CC  = gcc -O0
+CUDA_PATH     ?= $(shell ls -d /usr/local/cuda-*/bin/nvcc 2>/dev/null | sort -V | tail -1 | sed 's|/bin/nvcc||')
+ifeq ($(CUDA_PATH),)
+  CUDA_PATH   = /usr/local/cuda
+endif
+CC  = $(CUDA_PATH)/bin/nvcc -Xptxas="-v" -arch=sm_37 -lineinfo --use_fast_math -rdc=true
 
 
 # ---------------------------------------------------------------------
@@ -43,34 +47,31 @@ CCLNDIRS  = -L$(CPLEXLIBDIR) -L$(CONCERTLIBDIR)
 CLNDIRS   = -L$(CPLEXLIBDIR)
 CCLNFLAGS = -lm -lpthread -lconcert -lilocplex -lcplex
 CLNFLAGS  = -lm -lpthread -lrt -lcplex -lcusolver -lcublas Utilities.cu -lcurand -lgsl -lgslcblas -lcudadevrt
-#-lcudavert
+
+# GLPK link flags
+GLPK_CFLAGS   = -I$(GLPKDIR)/include
+GLPK_LDFLAGS  = -L$(GLPKDIR)/lib
+GLPK_CLNFLAGS = -lm -lpthread -lrt -lglpk -lcusolver -lcublas Utilities.cu -lcurand -lgsl -lgslcblas -lcudadevrt
 
 
 
 all:
 	make all_c
 
-#execute: all
-#	make execute_c
-
 
 CPLEXINCDIR   = $(CPLEXDIR)/include
-INCLUDES      = $(GSLDIR)$(EIGENDIR)
-GSL_LIBS      = -L$(HOME)/gsl/lib
-EXDIR         = $(CPLEXDIR)/examples
-EXINC         = $(EXDIR)/include
-EXDATA        = $(EXDIR)/data
-EXSRCC        = $(EXDIR)/src/c
+INCLUDES      = $(GSLDIR)
+GSL_LIBS      = -L$(GSLDIR)/lib
 EXSRCC        = ./
 
 
-CFLAGS  = $(COPT)  -I$(CPLEXINCDIR) -I$(INCLUDES)
-
+CFLAGS  = $(COPT)  -I$(CPLEXINCDIR) -I$(GSLDIR)/include
+CFLAGS_GLPK = $(COPT) $(GLPK_CFLAGS) -I$(GSLDIR)/include -DUSE_GLPK
 
 
 #------------------------------------------------------------
-#  make all      : to compile the examples. 
-#  make execute  : to compile and execute the examples.
+#  make all      : to compile with CPLEX (default)
+#  make glpk     : to compile with GLPK (open-source)
 #------------------------------------------------------------
 
 
@@ -80,21 +81,31 @@ C_EX = ACHRCuda
 
 all_c: $(C_EX) $(CX_EX)
 
+# GLPK target (open-source, no CPLEX needed)
+glpk: ACHRCuda_glpk
+
 clean :
 	/bin/rm -rf *.o *~ *.class
-	/bin/rm -rf $(C_EX) $(CX_EX) $(CPP_EX)
+	/bin/rm -rf $(C_EX) ACHRCuda_glpk $(CX_EX) $(CPP_EX)
 	/bin/rm -rf *.mps *.ord *.sos *.lp *.sav *.net *.msg *.log *.clp
 
 # ------------------------------------------------------------
-#
-# The examples
-#
+# CPLEX build
+# ------------------------------------------------------------
 
 ACHRCuda: ACHRCuda.o
 	$(CC) $(CFLAGS) $(CLNDIRS) $(GSL_LIBS) -o ACHRCuda ACHRCuda.o $(CLNFLAGS)  
 ACHRCuda.o: $(EXSRCC)/ACHRCuda.cu
 	$(CC) -c $(CFLAGS) ACHRCuda.cu -o ACHRCuda.o
 
+# ------------------------------------------------------------
+# GLPK build (open-source alternative)
+# ------------------------------------------------------------
+
+ACHRCuda_glpk: ACHRCuda_glpk.o
+	$(CC) $(CFLAGS_GLPK) $(GLPK_LDFLAGS) $(GSL_LIBS) -o ACHRCuda ACHRCuda_glpk.o $(GLPK_CLNFLAGS)
+ACHRCuda_glpk.o: $(EXSRCC)/ACHRCuda.cu
+	$(CC) -c $(CFLAGS_GLPK) ACHRCuda.cu -o ACHRCuda_glpk.o
 
 # Local Variables:
 # mode: makefile

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -e
+
+# ACHR.cu — GPU-accelerated sampling of metabolic networks
+# Step 1: Generate warmup points (GLPK + MPI)
+# Step 2: Sample using GPU (CUDA)
+
+# Parameters
+N_WARMUP=2120
+N_FILES=2
+N_POINTS=100
+N_STEPS=100
+
+# Code Ocean /data/ is read-only; copy MPS to writable /tmp/
+MODEL_SRC=/data/models/P_Putida.mps
+MODEL=/tmp/P_Putida.mps
+cp "$MODEL_SRC" "$MODEL"
+
+echo "=== Step 1: Generating warmup points ==="
+cd /code/VFWarmup
+mpirun --allow-run-as-root -np 1 --bind-to none ./createWarmupPtsGLPK "$MODEL" $N_WARMUP
+
+# Warmup CSV is written next to the MPS file: /tmp/P_Putida<nPts>warmup.csv
+WARMUP_CSV=$(ls -t /tmp/*warmup.csv 2>/dev/null | head -1)
+echo "Warmup CSV: $WARMUP_CSV"
+cp "$WARMUP_CSV" /results/
+
+echo ""
+echo "=== Step 2: GPU sampling ==="
+cd /code/ACHRcu
+./ACHRCuda "$MODEL" "$WARMUP_CSV" $N_FILES $N_POINTS $N_STEPS
+
+# Copy sampling results to output
+cp File* /results/ 2>/dev/null || true
+echo ""
+echo "=== Results ==="
+ls -la /results/
+echo "Done."
