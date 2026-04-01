@@ -5,8 +5,9 @@ set -e
 apt-get update -qq
 apt-get install -y --no-install-recommends \
     build-essential \
+    make \
+    gcc \
     libglpk-dev \
     openmpi-bin \
-    libopenmpi-dev \
-    > /dev/null
+    libopenmpi-dev
 rm -rf /var/lib/apt/lists/*
