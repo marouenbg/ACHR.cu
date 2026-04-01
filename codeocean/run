@@ -4,6 +4,13 @@ set -e
 # ACHR.cu — Generate warmup points for metabolic network sampling
 # Uses GLPK (open-source LP solver) + MPI
 
+# Install build dependencies (in case postInstall wasn't run)
+if ! command -v make &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y --no-install-recommends \
+        build-essential make gcc libglpk-dev openmpi-bin libopenmpi-dev
+fi
+
 # Parameters
 N_WARMUP=2120
 
