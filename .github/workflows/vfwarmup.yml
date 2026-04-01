@@ -30,23 +30,19 @@ jobs:
         working-directory: VFWarmup
         run: make glpk GLPKDIR=/usr
 
-      - name: Test VFWarmup (GLPK) — 2120 warmup points
+      - name: Test VFWarmup (GLPK) — P. putida
         working-directory: VFWarmup
         run: |
-          # P. putida has 1060 rxns, minimum warmup = 2*1060 = 2120
           mpirun -np 1 --oversubscribe --bind-to none ./createWarmupPtsGLPK lib/P_Putida.mps 2120
 
-      - name: Validate output
+      - name: Validate P. putida output
         working-directory: VFWarmup
         run: |
-          # Output file is in lib/ because modelName includes path prefix
           test -f lib/P_Putida2120warmup.csv
           NROWS=$(wc -l < lib/P_Putida2120warmup.csv)
           NCOLS=$(head -1 lib/P_Putida2120warmup.csv | tr ',' '\n' | wc -l)
           echo "Output: ${NROWS} rows x ${NCOLS} columns"
-          # P. putida has 1060 reactions
           test "$NROWS" -eq 1060
-          # Should have 2120 warmup points (2 * nRxns)
           test "$NCOLS" -eq 2120
           echo "Validation passed"
 
@@ -59,3 +55,38 @@ jobs:
           NROWS=$(wc -l < lib/P_Putida2120warmup.csv)
           test "$NROWS" -eq 1060
           echo "MPI parallel test passed"
+
+  fva-validation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        model: [iJN746, iML1515]
+        include:
+          - model: iJN746
+            name: "P. putida"
+          - model: iML1515
+            name: "E. coli K12"
+    name: FVA validation — ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install C dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libglpk-dev libopenmpi-dev openmpi-bin
+
+      - name: Build VFWarmup (GLPK)
+        working-directory: VFWarmup
+        run: make glpk GLPKDIR=/usr
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install cobra numpy pandas scipy httpx
+
+      - name: Validate FVA against COBRApy — ${{ matrix.name }}
+        working-directory: VFWarmup
+        run: python test_fva_validation.py ${{ matrix.model }} ./createWarmupPtsGLPK 1e-3
